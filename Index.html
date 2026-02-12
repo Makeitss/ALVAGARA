@@ -1,0 +1,1664 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALVAGARA - Sistema de Gestión</title>
+    <!-- Librería para manejo de Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <!-- Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- LIBRERÍA: Gráficos Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* ================= ESTILOS ORIGINALES (LOGIN) ================= */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #dfe1e7 0%, #7f7b83 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* Utilidades globales */
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .mt-2 { margin-top: 1rem; }
+        .text-sm { font-size: 0.875rem; }
+        .font-bold { font-weight: bold; }
+        
+        /* Notificaciones Toast */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+        }
+        .toast {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            margin-bottom: 10px;
+            border-left: 5px solid #333;
+            animation: slideIn 0.3s ease-out;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .toast.success { border-left-color: #2ecc71; }
+        .toast.error { border-left-color: #e74c3c; }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ================= ESTILOS LOGIN ================= */
+        .login-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .input-wrapper input {
+            background-color: #eeeeee;
+            border: none;
+            padding: 1rem;
+            font-size: 1rem;
+            width: 13em;
+            border-radius: 1rem;
+            color: lightcoral;
+            box-shadow: 0 0.4rem #616161;
+            cursor: pointer;
+        }
+        .input-wrapper input:focus { outline-color: lightcoral; }
+
+        .login-container {
+            background: white;
+            border-radius: 30px;
+            padding: 60px 80px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .logo { margin-bottom: 1px; }
+        .logo img { width: 100%; max-width: 400px; height: auto; }
+
+        h1, h2 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #000;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        h2 { margin-bottom: 30px; }
+
+        .form-group { margin-bottom: 25px; text-align: left; }
+        label {
+            display: block;
+            font-size: 18px;
+            font-weight: 400;
+            margin-bottom: 10px;
+            color: #000;
+        }
+        input[type="text"], input[type="password"], input[type="number"], input[type="date"], select {
+            width: 100%;
+            padding: 18px 25px;
+            border: none;
+            border-radius: 50px;
+            background-color: #e8e8e8;
+            font-size: 16px;
+            outline: none;
+            transition: background-color 0.3s;
+        }
+        input:focus, select:focus { background-color: #d8d8d8; }
+
+        .forgot-password {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .forgot-password a {
+            color: #000;
+            text-decoration: none;
+            font-size: 16px;
+        }
+        .forgot-password a:hover { text-decoration: underline; }
+
+        .button {
+            position: relative;
+            margin-top: 20px;
+            overflow: hidden;
+            height: 3rem;
+            padding: 0 4rem;
+            border-radius: 1.5rem;
+            background: #53515a;
+            background-size: 400%;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .button:hover::before { transform: scaleX(1); }
+        .button-content { position: relative; z-index: 1; }
+        .button::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform: scaleX(0);
+            transform-origin: 0 50%;
+            width: 100%;
+            height: inherit;
+            border-radius: inherit;
+            background: linear-gradient(82.3deg, rgb(85, 85, 88) 10.8%, #dddddf 94.3%);
+            transition: all 0.475s; 
+        }
+
+        @media (max-width: 600px) {
+            .login-container { padding: 40px 30px; }
+            h1, h2 { font-size: 24px; }
+        }
+
+        /* ================= ESTILOS DASHBOARD ================= */
+        .dashboard-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: #fff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+            transition: transform 0.3s ease;
+        }
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+        .sidebar-header img { width: 80px; }
+        .nav-links {
+            flex: 1;
+            padding: 20px 0;
+            list-style: none;
+        }
+        .nav-item {
+            padding: 15px 25px;
+            cursor: pointer;
+            color: #555;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1rem;
+        }
+        .nav-item:hover, .nav-item.active {
+            background-color: #f0f0f0;
+            color: #000;
+            border-left: 4px solid #53515a;
+        }
+        .user-info {
+            padding: 20px;
+            background: #f9f9f9;
+            border-top: 1px solid #eee;
+            font-size: 0.9rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            background: #f4f6f8;
+        }
+
+        /* Header Móvil */
+        .mobile-header { display: none; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .hamburger { font-size: 1.5rem; cursor: pointer; color: #333; }
+
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .page-title { font-size: 24px; font-weight: 600; color: #333; }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .card h3 { font-size: 14px; color: #777; margin-bottom: 10px; text-transform: uppercase; }
+        .card .value { font-size: 28px; font-weight: bold; color: #333; }
+
+        /* Tables */
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        th {
+            background-color: #f8f9fa;
+            color: #555;
+            font-weight: 600;
+        }
+        tr:hover { background-color: #fcfcfc; }
+
+        /* Status Badges */
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .badge.EN_INVENTORY { background: #e3f2fd; color: #1976d2; }
+        .badge.VENDIDO { background: #e8f5e9; color: #2e7d32; }
+        .badge.PRESTADO { background: #fff3e0; color: #ef6c00; }
+        .badge.EN_REPARACION { background: #fce4ec; color: #c2185b; }
+        .badge.PERDIDO { background: #ffebee; color: #c62828; }
+        .badge.EN_GARANTIA { background: #f3e5f5; color: #7b1fa2; }
+
+        /* Buttons & Inputs in Dashboard */
+        .action-btn {
+            background: #53515a;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        .action-btn:hover { background: #333; }
+        .action-btn.secondary { background: #e0e0e0; color: #333; }
+        
+        .controls-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .search-input {
+            flex: 1;
+            padding: 10px 20px !important;
+            min-width: 200px !important;
+            border-radius: 10px !important;
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+        /* ================= NUEVOS ESTILOS (Charts & POS) ================= */
+        
+        /* Contenedores de gráficos */
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        /* POS Layout */
+        .pos-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 24px;
+            height: calc(100vh - 100px);
+        }
+        .pos-products {
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        .pos-cart {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            border: 1px solid #e0e0e0;
+        }
+        .pos-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            background: #f8f9fa;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .pos-items { flex: 1; overflow-y: auto; padding: 10px; }
+        .pos-footer { padding: 20px; border-top: 1px solid #eee; background: white; }
+
+        /* Product Grid en POS */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px;
+        }
+        .product-card {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+        }
+        .product-card:hover {
+            transform: translateY(-3px);
+            border-color: #53515a;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .product-price { font-weight: 700; margin-top: 8px; color: #53515a; }
+
+        /* Items del Carrito */
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        .cart-item-info h4 { font-size: 0.9rem; margin-bottom: 4px; }
+        .cart-item-info p { font-size: 0.8rem; color: #888; }
+        .btn-remove { color: #e74c3c; background: none; border: none; cursor: pointer; padding: 5px; }
+
+        /* ================= RESPONSIVE MOBILE ================= */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -260px;
+                height: 100%;
+                box-shadow: 10px 0 20px rgba(0,0,0,0.1);
+            }
+            .sidebar.active { left: 0; transform: translateX(0); }
+            .mobile-header { display: flex; }
+            .pos-container { grid-template-columns: 1fr; height: auto; }
+            .pos-cart {
+                position: fixed;
+                right: 0; bottom: 0; width: 100%; height: 80px;
+                z-index: 50;
+                transform: translateY(calc(100% - 80px));
+                transition: 0.3s;
+                border-radius: 20px 20px 0 0;
+            }
+            .pos-cart.open { transform: translateY(0); height: 80vh; }
+            .pos-header { cursor: pointer; display: flex; justify-content: space-between; }
+            
+            /* Tables to cards */
+            table, thead, tbody, th, td, tr { display: block; }
+            thead tr { position: absolute; top: -9999px; left: -9999px; }
+            tr {
+                border: 1px solid #ccc;
+                margin-bottom: 10px;
+                border-radius: 10px;
+                padding: 10px;
+                background: white;
+            }
+            td {
+                border: none;
+                border-bottom: 1px solid #eee;
+                position: relative;
+                padding-left: 50%;
+            }
+            td:before {
+                position: absolute;
+                top: 12px;
+                left: 10px;
+                width: 45%;
+                padding-right: 10px;
+                white-space: nowrap;
+                font-weight: bold;
+                color: #555;
+                content: attr(data-label);
+            }
+            .charts-row { grid-template-columns: 1fr; }
+        }
+
+        /* ================= ESTILOS PERSONALIZADOS SOLICITADOS ================= */
+        
+        /* 1. TOGGLE HEART */
+        /* Se aplican solo al checkbox con id 'auto-backup-toggle' para no afectar otros */
+        #auto-backup-toggle {
+            display: none;
+        }
+
+        .love-heart, .love-heart::after {
+            border-color: hsl(231deg 28% 86%);
+            border: 1px solid;
+            border-top-left-radius: 100px;
+            border-top-right-radius: 100px;
+            width: 10px;
+            height: 8px;
+            border-bottom: 0
+        }
+
+        .round {
+            position: absolute;
+            z-index: 1;
+            width: 8px;
+            height: 8px;
+            background: hsl(0deg 0% 100%);
+            box-shadow: rgb(0 0 0 / 24%) 0px 0px 4px 0px;
+            border-radius: 100%;
+            left: 0px;
+            bottom: -1px;
+            transition: all .5s ease;
+            animation: check-animation2 .5s forwards;
+        }
+
+        #auto-backup-toggle:checked + label .round {
+            transform: translate(0px, 0px);
+            animation: check-animation .5s forwards;
+            background-color: hsl(0deg 0% 100%);
+        }
+
+        @keyframes check-animation {
+            0% { transform: translate(0px, 0px); }
+            50% { transform: translate(0px, 7px); }
+            100% { transform: translate(7px, 7px); }
+        }
+
+        @keyframes check-animation2 {
+            0% { transform: translate(7px, 7px); }
+            50% { transform: translate(0px, 7px); }
+            100% { transform: translate(0px, 0px); }
+        }
+
+        .love-heart {
+            box-sizing: border-box;
+            position: relative;
+            transform: rotate(-45deg) translate(-50%, -33px) scale(4);
+            display: block;
+            border-color: hsl(231deg 28% 86%);
+            cursor: pointer;
+            top: 0;
+        }
+
+        #auto-backup-toggle:checked + label .love-heart, 
+        #auto-backup-toggle:checked + label .love-heart::after, 
+        #auto-backup-toggle:checked + label .love-heart .bottom {
+            border-color: hsl(347deg 81% 61%);
+            box-shadow: inset 6px -5px 0px 2px hsl(347deg 99% 72%);
+        }
+
+        .love-heart::after, .love-heart .bottom {
+            content: "";
+            display: block;
+            box-sizing: border-box;
+            position: absolute;
+            border-color: hsl(231deg 28% 86%);
+        }
+
+        .love-heart::after {
+            right: -9px;
+            transform: rotate(90deg);
+            top: 7px;
+        }
+
+        .love-heart .bottom {
+            width: 11px;
+            height: 11px;
+            border-left: 1px solid;
+            border-bottom: 1px solid;
+            border-color: hsl(231deg 28% 86%);
+            left: -1px;
+            top: 5px;
+            border-radius: 0px 0px 0px 5px;
+        }
+
+        /* 2. BOTON IMPORTAR PERSONALIZADO */
+        /* Se renombra selector 'button' a '.btn-upload-styled' */
+        .btn-upload-styled {
+            font-family: inherit;
+            font-size: 20px;
+            background: #212121;
+            color: white;
+            fill: rgb(155, 153, 153);
+            padding: 0.7em 1em;
+            padding-left: 0.9em;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            border: none;
+            border-radius: 15px;
+            font-weight: 1000;
+            width: fit-content; /* Importante para que no ocupe todo el ancho */
+        }
+
+        .btn-upload-styled span {
+            display: block;
+            margin-left: 0.3em;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .btn-upload-styled svg {
+            display: block;
+            transform-origin: center center;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .btn-upload-styled:hover {
+            background: #000;
+        }
+
+        .btn-upload-styled:hover .svg-wrapper {
+            transform: scale(1.25);
+            transition: 0.5s linear;
+        }
+
+        .btn-upload-styled:hover svg {
+            transform: translateX(1.2em) scale(1.1);
+            fill: #fff;
+        }
+
+        .btn-upload-styled:hover span {
+            opacity: 0;
+            transition: 0.5s linear;
+        }
+
+        .btn-upload-styled:active {
+            transform: scale(0.95);
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- NOTIFICACIONES -->
+    <div id="toast-container"></div>
+
+    <!-- 1. VISTA LOGIN -->
+    <div id="login-view" class="login-wrapper">
+        <div class="login-container">
+            <div class="logo">
+                <!-- Placeholder para imagen local -->
+                <img src="images/ALVAGARA.png" onerror="this.style.display='none'" alt="ALVAGARA Logo">
+                <div id="text-logo" style="display:none; font-size: 40px; font-weight: bold; color: #53515a;">ALVAGARA</div>
+            </div>
+            
+            <h1>Gestión</h1>
+            <h2>base de datos</h2>
+            
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="usuario">Usuario</label>
+                    <input type="text" id="login-user" placeholder="Escribe aqui..." required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="contrasena">Contraseña</label>
+                    <input type="password" id="login-pass" placeholder="Escribe aqui..." required>
+                </div>
+                
+                <div class="forgot-password">
+                    <a href="#">¿Olvidaste tu contraseña?</a>
+                </div>
+                
+                <div class="button-container">
+                    <button type="submit" class="button">
+                        <span class="button-content">Ingresar</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. VISTA DASHBOARD (Sistema Principal) -->
+    <div id="dashboard-view" class="dashboard-container hidden">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2 style="font-size: 20px; margin:0;">ALVAGARA</h2>
+            </div>
+            <ul class="nav-links">
+                <li class="nav-item active" onclick="app.navigate('dashboard')">
+                    <i class="fas fa-chart-pie"></i> Dashboard
+                </li>
+                <li class="nav-item" onclick="app.navigate('pos')">
+                    <i class="fas fa-cash-register"></i> Punto de Venta
+                </li>
+                <li class="nav-item" onclick="app.navigate('inventory')">
+                    <i class="fas fa-boxes"></i> Inventario
+                </li>
+                <li class="nav-item" onclick="app.navigate('sales')">
+                    <i class="fas fa-chart-line"></i> Ventas y Reportes
+                </li>
+                <li class="nav-item" onclick="app.navigate('settings')">
+                    <i class="fas fa-cog"></i> Configuración
+                </li>
+            </ul>
+            <div class="user-info">
+                <p><strong>Usuario:</strong> <span id="current-username">-</span></p>
+                <p><strong>Rol:</strong> <span id="current-role">-</span></p>
+                <button class="action-btn secondary mt-2" style="width:100%" onclick="app.logout()">Cerrar Sesión</button>
+            </div>
+        </aside>
+
+        <!-- Contenido Principal -->
+        <main class="main-content">
+            <!-- Header Móvil -->
+            <header class="mobile-header">
+                <i class="fas fa-bars hamburger" onclick="document.getElementById('sidebar').classList.toggle('active')"></i>
+                <span style="font-weight: 700; color: #53515a;">ALVAGARA</span>
+                <div style="width: 24px;"></div>
+            </header>
+
+            <header class="header-bar">
+                <div class="page-title" id="page-title">Dashboard</div>
+                <div id="header-actions">
+                    <!-- Botones dinámicos según vista -->
+                </div>
+            </header>
+
+            <!-- SECCIÓN: DASHBOARD (Gráficos) -->
+            <section id="section-dashboard">
+                <div class="card-grid">
+                    <div class="card">
+                        <h3>Ventas Totales</h3>
+                        <div class="value" id="kpi-revenue">$0.00</div>
+                    </div>
+                    <div class="card">
+                        <h3>Ganancia Neta</h3>
+                        <div class="value" id="kpi-profit" style="color: #2ecc71;">$0.00</div>
+                    </div>
+                    <div class="card">
+                        <h3>Productos en Stock</h3>
+                        <div class="value" id="kpi-stock">0</div>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="card">
+                        <h3>Ventas por Marca</h3>
+                        <div class="chart-container">
+                            <canvas id="chart-brands"></canvas>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3>Rendimiento (Demo)</h3>
+                        <div class="chart-container">
+                            <canvas id="chart-trend"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECCIÓN: POS -->
+            <section id="section-pos" class="hidden">
+                <div class="pos-container">
+                    <!-- Izquierda: Catálogo -->
+                    <div class="pos-products">
+                        <div class="controls-row">
+                            <input type="text" class="search-input" placeholder="Buscar producto..." onkeyup="app.filterPos(this.value)">
+                        </div>
+                        <div class="product-grid" id="pos-grid">
+                            <!-- JS renderiza aquí -->
+                        </div>
+                    </div>
+
+                    <!-- Derecha: Carrito (En móvil es un drawer inferior) -->
+                    <div class="pos-cart" id="pos-cart-panel">
+                        <div class="pos-header" onclick="app.toggleCartMobile()">
+                            <h3><i class="fas fa-shopping-cart"></i> Carrito</h3>
+                            <span id="cart-count-badge" class="badge" style="background: #53515a; color: white;">0</span>
+                        </div>
+                        <div class="pos-items" id="cart-list">
+                            <!-- Items del carrito -->
+                            <div style="text-align: center; color: #94a3b8; margin-top: 50px;">
+                                <i class="fas fa-basket-shopping" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                                <p>El carrito está vacío</p>
+                            </div>
+                        </div>
+                        <div class="pos-footer">
+                            <div class="flex justify-between items-center" style="margin-bottom: 15px;">
+                                <span style="font-weight: 600;">Total</span>
+                                <span id="cart-total" style="font-size: 1.2rem; font-weight: bold;">$0.00</span>
+                            </div>
+                            <button class="action-btn" onclick="app.checkout()" style="width: 100%; padding: 15px; background: #2ecc71;">
+                                COBRAR AHORA
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECCIÓN: INVENTARIO -->
+            <section id="section-inventory" class="hidden">
+                <div class="controls-row">
+                    <input type="text" id="search-inventory" class="search-input" placeholder="Buscar por serial, marca o modelo..." onkeyup="app.filterInventory()">
+                    <select id="filter-status" class="search-input" style="flex: 0 0 150px;" onchange="app.filterInventory()">
+                        <option value="">Todos los estados</option>
+                        <option value="EN_INVENTORY">En Inventario</option>
+                        <option value="VENDIDO">Vendido</option>
+                        <option value="PRESTADO">Prestado</option>
+                        <option value="EN_REPARACION">En Reparación</option>
+                    </select>
+                    <button class="action-btn" onclick="app.openModal('add-item')">
+                        <i class="fas fa-plus"></i> Nuevo Equipo
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Serial</th>
+                                <th>Marca/Modelo</th>
+                                <th>Tipo</th>
+                                <th>Costo</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-table-body">
+                            <!-- Filas dinámicas -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- SECCIÓN: VENTAS Y REPORTES -->
+            <section id="section-sales" class="hidden">
+                <!-- KPIs -->
+                <div class="card-grid">
+                    <div class="card">
+                        <h3>Inventario Total (Costo)</h3>
+                        <div class="value" id="kpi-total-cost">$0.00</div>
+                    </div>
+                    <div class="card">
+                        <h3>Ventas Totales</h3>
+                        <div class="value" id="kpi-total-revenue">$0.00</div>
+                    </div>
+                    <div class="card">
+                        <h3>Ganancia Neta</h3>
+                        <div class="value" id="kpi-profit-report" style="color: #2ecc71;">$0.00</div>
+                    </div>
+                    <div class="card">
+                        <h3>Ganancia Hoy</h3>
+                        <div class="value" id="kpi-profit-today">$0.00</div>
+                    </div>
+                </div>
+
+                <h3>Historial de Transacciones Recientes</h3>
+                <div class="table-container" style="margin-top: 15px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th data-label="Fecha">Fecha</th>
+                                <th data-label="Vendedor">Vendedor</th>
+                                <th data-label="Equipo">Equipo (Serial)</th>
+                                <th data-label="Costo">Costo</th>
+                                <th data-label="Venta">Precio Venta</th>
+                                <th data-label="Ganancia">Ganancia</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sales-table-body">
+                            <!-- Filas dinámicas -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+             <!-- SECCIÓN: CONFIGURACIÓN / IMPORTAR -->
+             <section id="section-settings" class="hidden">
+                <div class="card" style="max-width: 600px; margin: 0 auto;">
+                    <h3 style="margin-bottom: 20px;">Respaldo y Migración</h3>
+                    
+                    <!-- Toggle Switch Personalizado -->
+                    <div class="flex items-center" style="margin-bottom: 30px; padding: 15px; background: #f9f9f9; border-radius: 12px;">
+                        <div style="flex:1;">
+                            <strong>Auto-Respaldo (Cada 5 min)</strong>
+                            <p class="text-sm">Guarda automáticamente en disco local.</p>
+                        </div>
+                        <!-- Estructura del Toggle -->
+                        <input type="checkbox" id="auto-backup-toggle" checked>
+                        <label for="auto-backup-toggle">
+                            <div class="love-heart">
+                                <div class="round"></div>
+                                <div class="bottom"></div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Botón Importar Personalizado -->
+                    <div class="flex flex-col gap-2">
+                        <p style="margin-bottom: 10px;">Cargar Base de Datos desde Excel:</p>
+                        <label class="btn-upload-styled">
+                            <input type="file" hidden accept=".xlsx, .xls" onchange="app.importExcel(this)">
+                            <div class="svg-wrapper">
+                                <svg height="24" width="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M0 0h24v24H0z" fill="none"></path>
+                                    <path d="M1 14.5 6 9h2l3.5 3.5L16 8h3l-7.5 8-8-8.5H1zM9 22h6a1 1 0 0 1 0 2H9a1 1 0 0 1 0-2zm0-4h6a1 1 0 0 1 0 2H9a1 1 0 0 1 0-2zm0-4h6a1 1 0 0 1 0 2H9a1 1 0 0 1 0-2zM12 2V0H8v2H4a1 1 0 0 0 0 2h16a1 1 0 0 1 0-2h-4z" fill="currentColor"></path>
+                                </svg>
+                            </div>
+                            <span>Cargar Base de Datos</span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL: AGREGAR EQUIPO -->
+    <div id="modal-add-item" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Registrar Nuevo Equipo</h3>
+                <button class="close-modal" onclick="app.closeModal('add-item')">&times;</button>
+            </div>
+            <form id="form-add-item">
+                <div class="form-group">
+                    <label>Serial (Único)</label>
+                    <input type="text" name="serial" required>
+                </div>
+                <div class="form-group">
+                    <label>Marca</label>
+                    <input type="text" name="brand" placeholder="Samsung, Apple..." required>
+                </div>
+                <div class="form-group">
+                    <label>Modelo</label>
+                    <input type="text" name="model" placeholder="S23 Ultra, iPhone 14..." required>
+                </div>
+                <div class="flex gap-2">
+                    <div class="form-group" style="flex:1">
+                        <label>Tipo</label>
+                        <select name="type">
+                            <option value="CELULAR">Celular</option>
+                            <option value="TABLET">Tablet</option>
+                            <option value="LAPTOP">Laptop</option>
+                            <option value="ACCESORIO">Accesorio</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex:1">
+                        <label>Costo Compra</label>
+                        <input type="number" name="cost" step="0.01" required>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="action-btn secondary" onclick="app.closeModal('add-item')">Cancelar</button>
+                    <button type="submit" class="action-btn">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ACTUALIZAR ESTADO (VENDER/ETC) -->
+    <div id="modal-update-status" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Actualizar Estado</h3>
+                <button class="close-modal" onclick="app.closeModal('update-status')">&times;</button>
+            </div>
+            <p id="modal-item-info" class="mb-2" style="margin-bottom: 15px; font-weight: bold;"></p>
+            <form id="form-update-status">
+                <input type="hidden" name="serial" id="status-serial">
+                <input type="hidden" name="current-cost" id="status-cost">
+                
+                <div class="form-group">
+                    <label>Nuevo Estado</label>
+                    <select name="newStatus" id="status-select" onchange="app.toggleSalePriceInput()" required>
+                        <option value="EN_INVENTORY">En Inventario</option>
+                        <option value="VENDIDO">Vendido</option>
+                        <option value="PRESTADO">Prestado</option>
+                        <option value="EN_GARANTIA">En Garantía</option>
+                        <option value="EN_REPARACION">En Reparación</option>
+                        <option value="PERDIDO">Perdido</option>
+                        <option value="DEVUELTO">Devuelto</option>
+                    </select>
+                </div>
+                
+                <div class="form-group hidden" id="sale-price-group">
+                    <label>Precio de Venta</label>
+                    <input type="number" name="salePrice" step="0.01" placeholder="0.00">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="action-btn secondary" onclick="app.closeModal('update-status')">Cancelar</button>
+                    <button type="submit" class="action-btn">Confirmar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: CONFIRMAR PRECIO (POS) -->
+    <div id="modal-pos-price" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Confirmar Precio</h3>
+                <button class="close-modal" onclick="app.closeModal('pos-price')">&times;</button>
+            </div>
+            <p id="modal-pos-desc" style="margin-bottom: 15px;"></p>
+            <form onsubmit="app.confirmAddToCart(event)">
+                <input type="hidden" id="pos-temp-serial">
+                <div class="form-group">
+                    <label>Precio de Venta</label>
+                    <input type="number" id="pos-temp-price" required>
+                </div>
+                <button type="submit" class="action-btn" style="width:100%">Agregar al Carrito</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * ALVAGARA SYSTEM CORE
+         * Arquitectura: Modelo simple en localStorage simulando Backend relacional.
+         */
+
+        const Utils = {
+            formatCurrency: (num) => {
+                return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(num);
+            },
+            generateID: () => Date.now().toString(36) + Math.random().toString(36).substr(2),
+            showToast: (msg, type = 'success') => {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check' : 'fa-exclamation-circle'}"></i> <span>${msg}</span>`;
+                container.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+        };
+
+        // --- MOCK DATABASE & STATE ---
+        const DB = {
+            users: [
+                { user: 'admin', pass: 'admin', role: 'ADMIN', name: 'Administrador' },
+                { user: 'gerente', pass: 'gerente', role: 'GERENTE', name: 'Gerente General' },
+                { user: 'empleado', pass: 'empleado', role: 'EMPLEADO', name: 'Vendedor 1' }
+            ],
+            
+            getInventory: () => JSON.parse(localStorage.getItem('alv_inventory')) || [],
+            saveInventory: (data) => localStorage.setItem('alv_inventory', JSON.stringify(data)),
+            
+            getMovements: () => JSON.parse(localStorage.getItem('alv_movements')) || [],
+            saveMovements: (data) => localStorage.setItem('alv_movements', JSON.stringify(data)),
+
+            // CAMBIO: Inicializa vacío (sin demo data)
+            init: () => {
+                if (!localStorage.getItem('alv_inventory')) {
+                    // Inventario vacío
+                    localStorage.setItem('alv_inventory', JSON.stringify([]));
+                }
+                if (!localStorage.getItem('alv_movements')) {
+                    localStorage.setItem('alv_movements', JSON.stringify([]));
+                }
+            }
+        };
+
+        // --- APP LOGIC ---
+        const app = {
+            currentUser: null,
+            autoBackupInterval: null,
+            fileHandle: null,
+            autoBackupEnabled: true, // Estado del toggle
+
+            cart: [],
+            charts: {},
+
+            init: () => {
+                DB.init();
+                app.checkSession();
+                
+                // Event Listeners Forms
+                document.getElementById('login-form').onsubmit = app.handleLogin;
+                document.getElementById('form-add-item').onsubmit = app.handleAddItem;
+                document.getElementById('form-update-status').onsubmit = app.handleUpdateStatus;
+
+                // Listener para el toggle de backup
+                const toggle = document.getElementById('auto-backup-toggle');
+                if(toggle) {
+                    toggle.addEventListener('change', (e) => {
+                        app.autoBackupEnabled = e.target.checked;
+                        if(app.autoBackupEnabled) {
+                            if(['ADMIN', 'GERENTE'].includes(app.currentUser?.role)) {
+                                app.startAutoBackup();
+                                Utils.showToast('Auto-Respaldo Activado');
+                            }
+                        } else {
+                            clearInterval(app.autoBackupInterval);
+                            Utils.showToast('Auto-Respaldo Desactivado');
+                        }
+                    });
+                }
+
+                // Manejo de logo fallback
+                const logoImg = document.querySelector('.logo img');
+                logoImg.onerror = () => {
+                    logoImg.style.display = 'none';
+                    document.getElementById('text-logo').style.display = 'block';
+                };
+            },
+
+            checkSession: () => {
+                const session = sessionStorage.getItem('alv_session');
+                if (session) {
+                    app.currentUser = JSON.parse(session);
+                    app.loadDashboard();
+                } else {
+                    app.showLogin();
+                }
+            },
+
+            // --- AUTH ---
+            handleLogin: (e) => {
+                e.preventDefault();
+                const u = document.getElementById('login-user').value.toLowerCase().trim();
+                const p = document.getElementById('login-pass').value;
+
+                const userFound = DB.users.find(usr => usr.user === u && usr.pass === p);
+
+                if (userFound) {
+                    app.currentUser = userFound;
+                    sessionStorage.setItem('alv_session', JSON.stringify(userFound));
+                    Utils.showToast(`Bienvenido ${userFound.name}`);
+                    app.loadDashboard();
+                } else {
+                    Utils.showToast('Credenciales incorrectas', 'error');
+                }
+            },
+
+            logout: () => {
+                app.currentUser = null;
+                sessionStorage.removeItem('alv_session');
+                clearInterval(app.autoBackupInterval);
+                app.showLogin();
+            },
+
+            showLogin: () => {
+                document.getElementById('login-view').classList.remove('hidden');
+                document.getElementById('dashboard-view').classList.add('hidden');
+            },
+
+            loadDashboard: () => {
+                document.getElementById('login-view').classList.add('hidden');
+                document.getElementById('dashboard-view').classList.remove('hidden');
+                
+                document.getElementById('current-username').textContent = app.currentUser.name;
+                document.getElementById('current-role').textContent = app.currentUser.role;
+
+                // Verificar estado del toggle al cargar
+                const toggle = document.getElementById('auto-backup-toggle');
+                if(toggle) {
+                    toggle.checked = app.autoBackupEnabled;
+                }
+
+                // Iniciar auto backup si está activo y es admin/gerente
+                if (app.autoBackupEnabled && ['ADMIN', 'GERENTE'].includes(app.currentUser.role)) {
+                    app.startAutoBackup();
+                }
+
+                app.navigate('dashboard');
+            },
+
+            // --- NAVIGATION ---
+            navigate: (sectionId) => {
+                document.querySelectorAll('section').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+                document.getElementById(`section-${sectionId}`).classList.remove('hidden');
+                
+                const navItems = document.querySelectorAll('.nav-item');
+                const indexMap = { 'dashboard': 0, 'pos': 1, 'inventory': 2, 'sales': 3, 'settings': 4 };
+                if(navItems[indexMap[sectionId]]) navItems[indexMap[sectionId]].classList.add('active');
+
+                const titles = { 'dashboard': 'Dashboard', 'pos': 'Punto de Venta', 'inventory': 'Inventario', 'sales': 'Ventas y Reportes', 'settings': 'Configuración' };
+                document.getElementById('page-title').textContent = titles[sectionId];
+
+                if(window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('active');
+
+                if (sectionId === 'inventory') app.renderInventory();
+                if (sectionId === 'sales') app.renderSales();
+                if (sectionId === 'dashboard') app.renderDashboard();
+                if (sectionId === 'pos') app.renderPOS();
+            },
+
+            // --- DASHBOARD & CHARTS ---
+            renderDashboard: () => {
+                const inv = DB.getInventory();
+                const movements = DB.getMovements();
+
+                let totalRevenue = 0;
+                let totalProfit = 0;
+                const today = new Date().toISOString().split('T')[0];
+                let profitToday = 0;
+
+                movements.forEach(m => {
+                    if (m.newStatus === 'VENDIDO') {
+                        totalRevenue += m.salePrice;
+                        totalProfit += m.profit;
+                        if (m.date.startsWith(today)) profitToday += m.profit;
+                    }
+                });
+
+                const totalCost = inv.reduce((sum, i) => sum + (i.cost || 0), 0);
+                const totalStock = inv.filter(i => i.status === 'EN_INVENTORY').length;
+
+                document.getElementById('kpi-revenue').textContent = Utils.formatCurrency(totalRevenue);
+                document.getElementById('kpi-profit').textContent = Utils.formatCurrency(totalProfit);
+                document.getElementById('kpi-stock').textContent = totalStock;
+
+                const brandCounts = {};
+                movements.forEach(s => {
+                    if(s.newStatus === 'VENDIDO') {
+                        brandCounts[s.brand] = (brandCounts[s.brand] || 0) + 1;
+                    }
+                });
+
+                const ctx1 = document.getElementById('chart-brands').getContext('2d');
+                if(app.charts.brands) app.charts.brands.destroy();
+                app.charts.brands = new Chart(ctx1, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(brandCounts),
+                        datasets: [{ data: Object.values(brandCounts), backgroundColor: ['#53515a', '#7f7b83', '#dfe1e7', '#333'] }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+
+                const ctx2 = document.getElementById('chart-trend').getContext('2d');
+                if(app.charts.trend) app.charts.trend.destroy();
+                app.charts.trend = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+                        datasets: [{
+                            label: 'Ventas ($)',
+                            data: [0,0,0,0,0,0,0], // Empieza vacio
+                            backgroundColor: '#53515a'
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            },
+
+            // --- POS MODULE ---
+            renderPOS: () => {
+                const inv = DB.getInventory().filter(i => i.status === 'EN_INVENTORY');
+                const grid = document.getElementById('pos-grid');
+                grid.innerHTML = '';
+                
+                inv.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'product-card';
+                    card.innerHTML = `
+                        <i class="fas fa-mobile-alt" style="font-size: 2rem; color: #53515a; margin-bottom: 10px;"></i>
+                        <h4>${item.brand} ${item.model}</h4>
+                        <small style="color:#888">${item.serial}</small>
+                        <div class="product-price">${Utils.formatCurrency(item.cost)}</div>
+                    `;
+                    card.onclick = () => app.openPosPriceModal(item);
+                    grid.appendChild(card);
+                });
+                app.renderCart();
+            },
+
+            openPosPriceModal: (item) => {
+                const suggested = Math.floor(item.cost * 1.3);
+                document.getElementById('pos-temp-serial').value = item.serial;
+                document.getElementById('pos-temp-price').value = suggested;
+                document.getElementById('modal-pos-desc').textContent = `Vender: ${item.brand} ${item.model}`;
+                app.openModal('pos-price');
+            },
+
+            confirmAddToCart: (e) => {
+                e.preventDefault();
+                const serial = document.getElementById('pos-temp-serial').value;
+                const price = parseFloat(document.getElementById('pos-temp-price').value);
+                const item = DB.getInventory().find(i => i.serial === serial);
+                
+                if(app.cart.find(c => c.serial === serial)) {
+                    Utils.showToast('Ya está en el carrito', 'error'); return;
+                }
+
+                app.cart.push({ ...item, salePrice: price, cartId: Date.now() });
+                app.renderCart();
+                app.closeModal('pos-price');
+                if(window.innerWidth <= 768) app.toggleCartMobile(true);
+            },
+
+            renderCart: () => {
+                const list = document.getElementById('cart-list');
+                document.getElementById('cart-count-badge').textContent = app.cart.length;
+                
+                if(app.cart.length === 0) {
+                    list.innerHTML = `<div style="text-align: center; color: #94a3b8; margin-top: 50px;"><i class="fas fa-basket-shopping" style="font-size: 2rem;"></i><p>El carrito está vacío</p></div>`;
+                    document.getElementById('cart-total').textContent = '$0.00';
+                    return;
+                }
+
+                list.innerHTML = '';
+                let total = 0;
+                app.cart.forEach((c, idx) => {
+                    total += c.salePrice;
+                    const div = document.createElement('div');
+                    div.className = 'cart-item';
+                    div.innerHTML = `
+                        <div class="cart-item-info">
+                            <h4>${c.brand} ${c.model}</h4>
+                            <p>${c.serial}</p>
+                        </div>
+                        <div class="flex items-center" style="gap:10px;">
+                            <span style="font-weight:700;">${Utils.formatCurrency(c.salePrice)}</span>
+                            <button class="btn-remove" onclick="app.removeFromCart(${idx})"><i class="fas fa-trash"></i></button>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                });
+                document.getElementById('cart-total').textContent = Utils.formatCurrency(total);
+            },
+
+            removeFromCart: (idx) => { app.cart.splice(idx, 1); app.renderCart(); },
+            
+            toggleCartMobile: (forceOpen = null) => {
+                if(window.innerWidth <= 768) {
+                    const el = document.getElementById('pos-cart-panel');
+                    if(forceOpen === true) el.classList.add('open');
+                    else if(forceOpen === false) el.classList.remove('open');
+                    else el.classList.toggle('open');
+                }
+            },
+
+            checkout: () => {
+                if(app.cart.length === 0) { Utils.showToast('Carrito vacío', 'error'); return; }
+                if(!confirm('¿Procesar venta?')) return;
+
+                const inv = DB.getInventory();
+                const movements = DB.getMovements();
+                let totalSale = 0, totalCost = 0;
+                
+                app.cart.forEach(cItem => {
+                    const idx = inv.findIndex(i => i.serial === cItem.serial);
+                    if(idx !== -1) inv[idx].status = 'VENDIDO';
+                    
+                    totalSale += cItem.salePrice;
+                    totalCost += cItem.cost;
+
+                    movements.push({
+                        date: new Date().toISOString(),
+                        serial: cItem.serial,
+                        brand: cItem.brand,
+                        model: cItem.model,
+                        oldStatus: 'EN_INVENTORY',
+                        newStatus: 'VENDIDO',
+                        user: app.currentUser.user,
+                        cost: cItem.cost,
+                        salePrice: cItem.salePrice,
+                        profit: cItem.salePrice - cItem.cost
+                    });
+                });
+
+                DB.saveInventory(inv);
+                DB.saveMovements(movements);
+
+                app.cart = [];
+                app.renderPOS(); // Recargar grid (quitar vendidos)
+                app.renderCart();
+                Utils.showToast('¡Venta exitosa!');
+            },
+
+            filterPos: (txt) => {
+                const cards = document.querySelectorAll('.product-card');
+                cards.forEach(c => c.style.display = c.innerText.toLowerCase().includes(txt.toLowerCase()) ? 'block' : 'none');
+            },
+
+            // --- INVENTORY MODULE ---
+            renderInventory: () => {
+                const list = DB.getInventory();
+                const tbody = document.getElementById('inventory-table-body');
+                tbody.innerHTML = '';
+
+                const search = document.getElementById('search-inventory').value.toLowerCase();
+                const statusFilter = document.getElementById('filter-status').value;
+
+                const filtered = list.filter(item => {
+                    const matchSearch = item.serial.toLowerCase().includes(search) || 
+                                      item.brand.toLowerCase().includes(search) || 
+                                      item.model.toLowerCase().includes(search);
+                    const matchStatus = statusFilter ? item.status === statusFilter : true;
+                    return matchSearch && matchStatus;
+                });
+
+                filtered.forEach(item => {
+                    const tr = document.createElement('tr');
+                    
+                    let actions = `
+                        <button class="action-btn secondary" onclick="app.openStatusModal('${item.serial}')">
+                            <i class="fas fa-exchange-alt"></i>
+                        </button>
+                    `;
+
+                    tr.innerHTML = `
+                        <td data-label="Serial"><strong>${item.serial}</strong></td>
+                        <td data-label="Marca/Modelo">${item.brand} ${item.model}</td>
+                        <td data-label="Tipo">${item.type}</td>
+                        <td data-label="Costo">${Utils.formatCurrency(item.cost)}</td>
+                        <td data-label="Estado"><span class="badge ${item.status}">${item.status.replace('_', ' ')}</span></td>
+                        <td data-label="Acciones">${actions}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            },
+
+            filterInventory: () => app.renderInventory(),
+
+            handleAddItem: (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const newItem = {
+                    serial: formData.get('serial').toUpperCase(),
+                    brand: formData.get('brand'),
+                    model: formData.get('model'),
+                    type: formData.get('type'),
+                    cost: parseFloat(formData.get('cost')),
+                    status: 'EN_INVENTORY',
+                    date: new Date().toISOString()
+                };
+
+                const list = DB.getInventory();
+                if (list.find(i => i.serial === newItem.serial)) {
+                    Utils.showToast('El serial ya existe en inventario', 'error');
+                    return;
+                }
+
+                list.push(newItem);
+                DB.saveInventory(list);
+                Utils.showToast('Equipo registrado');
+                app.closeModal('add-item');
+                e.target.reset();
+                app.renderInventory();
+            },
+
+            openStatusModal: (serial) => {
+                const list = DB.getInventory();
+                const item = list.find(i => i.serial === serial);
+                if (!item) return;
+
+                const select = document.getElementById('status-select');
+                const lostOption = select.querySelector('option[value="PERDIDO"]');
+                
+                if (app.currentUser.role === 'EMPLEADO') {
+                    lostOption.disabled = true;
+                    lostOption.title = "Solo admin/gerente puede usar este estado";
+                } else {
+                    lostOption.disabled = false;
+                    lostOption.title = "";
+                }
+
+                document.getElementById('status-serial').value = item.serial;
+                document.getElementById('status-cost').value = item.cost;
+                document.getElementById('modal-item-info').textContent = `Equipo: ${item.brand} ${item.model} (${item.serial})`;
+                
+                document.getElementById('status-select').value = item.status;
+                app.toggleSalePriceInput();
+
+                app.openModal('update-status');
+            },
+
+            handleUpdateStatus: (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const serial = formData.get('serial');
+                const newStatus = formData.get('newStatus');
+                const salePriceStr = formData.get('salePrice');
+                const cost = parseFloat(formData.get('current-cost'));
+
+                let salePrice = 0;
+                if (newStatus === 'VENDIDO' && (!salePriceStr || parseFloat(salePriceStr) <= 0)) {
+                    Utils.showToast('Para vender, ingrese un precio de venta válido', 'error');
+                    return;
+                }
+                if (newStatus === 'VENDIDO') salePrice = parseFloat(salePriceStr);
+
+                const list = DB.getInventory();
+                const idx = list.findIndex(i => i.serial === serial);
+                const oldStatus = list[idx].status;
+                list[idx].status = newStatus;
+                DB.saveInventory(list);
+
+                const movements = DB.getMovements();
+                movements.push({
+                    date: new Date().toISOString(),
+                    serial: serial,
+                    brand: list[idx].brand,
+                    model: list[idx].model,
+                    oldStatus: oldStatus,
+                    newStatus: newStatus,
+                    user: app.currentUser.user,
+                    cost: cost,
+                    salePrice: salePrice,
+                    profit: salePrice - cost
+                });
+                DB.saveMovements(movements);
+
+                Utils.showToast('Estado actualizado correctamente');
+                app.closeModal('update-status');
+                app.renderInventory();
+            },
+
+            toggleSalePriceInput: () => {
+                const status = document.getElementById('status-select').value;
+                const group = document.getElementById('sale-price-group');
+                if (status === 'VENDIDO') group.classList.remove('hidden');
+                else group.classList.add('hidden');
+            },
+
+            // --- SALES MODULE ---
+            renderSales: () => {
+                const inventory = DB.getInventory();
+                const movements = DB.getMovements();
+
+                let totalCost = inventory.reduce((sum, i) => sum + (i.cost || 0), 0);
+                
+                let totalRevenue = 0;
+                let totalProfit = 0;
+                let profitToday = 0;
+                const today = new Date().toISOString().split('T')[0];
+
+                const tbody = document.getElementById('sales-table-body');
+                tbody.innerHTML = '';
+
+                const sortedMovements = [...movements].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+                sortedMovements.forEach(m => {
+                    if (m.newStatus === 'VENDIDO') {
+                        totalRevenue += m.salePrice;
+                        totalProfit += m.profit;
+                        
+                        if (m.date.startsWith(today)) profitToday += m.profit;
+
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${new Date(m.date).toLocaleString()}</td>
+                            <td>${m.user}</td>
+                            <td>${m.brand} ${m.model} <br><small>${m.serial}</small></td>
+                            <td>${Utils.formatCurrency(m.cost)}</td>
+                            <td style="color: green; font-weight: bold;">${Utils.formatCurrency(m.salePrice)}</td>
+                            <td>${Utils.formatCurrency(m.profit)}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    }
+                });
+
+                document.getElementById('kpi-total-cost').textContent = Utils.formatCurrency(totalCost);
+                document.getElementById('kpi-total-revenue').textContent = Utils.formatCurrency(totalRevenue);
+                document.getElementById('kpi-profit-report').textContent = Utils.formatCurrency(totalProfit);
+                document.getElementById('kpi-profit-today').textContent = Utils.formatCurrency(profitToday);
+            },
+
+            // --- EXCEL & BACKUP MODULE ---
+            startAutoBackup: async () => {
+                // Verificar si está activo
+                if(!app.autoBackupEnabled) return;
+
+                try {
+                    app.fileHandle = await window.showSaveFilePicker({
+                        suggestedName: `ALVAGARA_Backup_${new Date().toISOString().split('T')[0]}.xlsx`,
+                        types: [{
+                            description: 'Excel File',
+                            accept: {'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']},
+                        }],
+                    });
+                } catch (err) { }
+
+                if (app.autoBackupInterval) clearInterval(app.autoBackupInterval);
+                
+                // Solo iniciar intervalo si el toggle sigue activo
+                if(app.autoBackupEnabled) {
+                    app.autoBackupInterval = setInterval(() => { 
+                        if(app.autoBackupEnabled) app.exportToExcel(true); 
+                    }, 300000);
+                }
+            },
+
+            exportToExcel: async (isAuto = false) => {
+                const inventory = DB.getInventory();
+                const movements = DB.getMovements();
+
+                const ws1 = XLSX.utils.json_to_sheet(inventory);
+                const ws2 = XLSX.utils.json_to_sheet(movements);
+
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws1, "Inventario");
+                XLSX.utils.book_append_sheet(wb, ws2, "Ventas_Historial");
+
+                const filename = `ALVAGARA_Backup_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+                if (isAuto && app.fileHandle) {
+                    try {
+                        const writable = await app.fileHandle.createWritable();
+                        await writable.write(XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' }));
+                        await writable.close();
+                        Utils.showToast('Respaldo automático guardado en disco local');
+                    } catch (err) { XLSX.writeFile(wb, filename); }
+                } else {
+                    XLSX.writeFile(wb, filename);
+                    if(!isAuto) Utils.showToast('Excel descargado correctamente');
+                }
+            },
+
+            importExcel: (input) => {
+                const file = input.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+                    let count = 0;
+                    let updated = 0;
+                    const currentInventory = DB.getInventory();
+
+                    jsonData.forEach(row => {
+                        if (!row.serial) return;
+
+                        const newItem = {
+                            serial: row.serial ? row.serial.toString().toUpperCase() : '',
+                            brand: row.brand || 'Desconocido',
+                            model: row.model || '',
+                            type: row.type || 'CELULAR',
+                            cost: parseFloat(row.cost) || 0,
+                            status: row.status || 'EN_INVENTORY',
+                            date: row.date || new Date().toISOString()
+                        };
+
+                        const existingIdx = currentInventory.findIndex(i => i.serial === newItem.serial);
+                        if (existingIdx >= 0) {
+                            currentInventory[existingIdx] = newItem;
+                            updated++;
+                        } else {
+                            currentInventory.push(newItem);
+                            count++;
+                        }
+                    });
+
+                    DB.saveInventory(currentInventory);
+                    Utils.showToast(`Importación finalizada. ${count} nuevos, ${updated} actualizados.`);
+                    input.value = ''; // Reset input
+                };
+                reader.readAsArrayBuffer(file);
+            },
+
+            // --- UI HELPERS ---
+            openModal: (id) => {
+                document.getElementById(`modal-${id}`).classList.remove('hidden');
+            },
+            closeModal: (id) => {
+                document.getElementById(`modal-${id}`).classList.add('hidden');
+            }
+        };
+
+        // Arrancar
+        window.onload = app.init;
+    </script>
+</body>
+</html>
