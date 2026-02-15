@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALVAGARA - Sistema gerencial</title>
+    <title>ALVAGARA - Sistema de Gestión Multi-Almacén</title>
     <!-- Librería para manejo de Excel -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <!-- Iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" href="images/ALVAGARA - copia.png" type="image/png">
+    <link rel="icon" href="images/ALVAGARA-copia.png" type="image/png">
     <!-- LIBRERÍA: Gráficos Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
@@ -149,7 +149,6 @@
         .badge.APPROVED { background: #e8f5e9; color: #2e7d32; border: 1px solid #2e7d32; }
         .badge.REJECTED { background: #ffebee; color: #c62828; border: 1px solid #c62828; }
         
-        /* Remision Badge */
         .badge.REMISION { background: #e0f7fa; color: #006064; border: 1px solid #006064; }
         .badge.OK { background: #d4edda; color: #155724; }
         .badge.DISCREPANCY { background: #f8d7da; color: #721c24; }
@@ -185,7 +184,7 @@
         .checkbox-wrapper { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; cursor: pointer; }
         .custom-checkbox { width: 20px; height: 20px; accent-color: #53515a; }
 
-        .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .charts-row { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 30px; }
         .chart-container { position: relative; height: 300px; width: 100%; }
 
         /* POS Layout */
@@ -230,7 +229,6 @@
         .btn-remove { color: #e74c3c; background: none; border: none; cursor: pointer; padding: 5px; }
 
         /* ================= SECCIONES NUEVAS ================= */
-        /* Cierre de Caja */
         .closing-grid {
             display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;
         }
@@ -446,15 +444,15 @@
                 <li class="nav-item" id="nav-requests" onclick="app.navigate('requests')">
                     <i class="fas fa-hand-holding-heart"></i> Solicitudes
                 </li>
-                <!-- NUEVO: REMISIONES -->
+                <!-- REMISIONES -->
                 <li class="nav-item hidden" id="nav-remissions" onclick="app.navigate('remissions')">
                     <i class="fas fa-truck"></i> Remisiones
                 </li>
-                <!-- NUEVO: CIERRE DE CAJA (DIARIO) -->
+                <!-- CIERRE DE CAJA -->
                 <li class="nav-item hidden" id="nav-closing" onclick="app.navigate('closing')">
                     <i class="fas fa-cash-register"></i> Cierre de Caja
                 </li>
-                <!-- NUEVO: REPORTES DE CAJA (ADMIN) -->
+                <!-- REPORTES DE CAJA -->
                 <li class="nav-item hidden" id="nav-closing-reports" onclick="app.navigate('closing-reports')">
                     <i class="fas fa-file-invoice-dollar"></i> Reportes Caja
                 </li>
@@ -501,7 +499,7 @@
                         <h3>Ganancia Neta</h3>
                         <div class="value" id="kpi-profit" style="color: #2ecc71;">$0.00</div>
                     </div>
-                    <!-- NUEVO: CAPITAL ACTUAL -->
+                    <!-- CAPITAL ACTUAL -->
                     <div class="card hidden" id="card-capital">
                         <h3 style="color: #53515a;">Capital Actual</h3>
                         <div class="value" id="kpi-capital" style="color: #333;">$0.00</div>
@@ -522,12 +520,6 @@
                         <h3>Ventas por Método de Pago</h3>
                         <div class="chart-container">
                             <canvas id="chart-payment"></canvas>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <h3>Ventas por Marca</h3>
-                        <div class="chart-container">
-                            <canvas id="chart-brands"></canvas>
                         </div>
                     </div>
                 </div>
@@ -627,7 +619,7 @@
                 </div>
             </section>
 
-            <!-- SECCIÓN: REMISIONES (NUEVO) -->
+            <!-- SECCIÓN: REMISIONES -->
             <section id="section-remissions" class="hidden">
                 <div class="card" style="margin-bottom: 20px; border-left: 5px solid #006064;">
                     <h3 style="color: #006064; margin:0;">Historial de Remisiones</h3>
@@ -642,8 +634,9 @@
                                 <th>Fecha</th>
                                 <th>De Almacén</th>
                                 <th>A Almacén</th>
+                                <th>Solicitante</th>
                                 <th>Items</th>
-                                <th>Responsable</th>
+                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="remissions-table-body"></tbody>
@@ -662,7 +655,6 @@
                 </div>
 
                 <div class="closing-grid">
-                    <!-- Columna Izquierda: Formulario de Ingreso -->
                     <div class="closing-card">
                         <h3><i class="fas fa-money-bill-wave"></i> Conteo Físico</h3>
                         <p class="text-sm" style="margin-bottom: 15px; color: #666;">Ingrese el valor exacto que tiene en cada medio de pago.</p>
@@ -686,12 +678,10 @@
                         </div>
                     </div>
 
-                    <!-- Columna Derecha: Comparación -->
                     <div class="closing-card">
                         <h3><i class="fas fa-balance-scale"></i> Comparativa Sistema vs. Físico</h3>
                         
                         <div id="closing-comparison-area">
-                            <!-- Se llena dinámicamente con JS -->
                             <div class="text-sm" style="text-align: center; color: #999; padding: 40px;">
                                 Seleccione una fecha y presione "Procesar Cierre"
                             </div>
@@ -819,7 +809,7 @@
                     </div>
                 </div>
 
-                <!-- NUEVO: CONFIGURACION CAPITAL (SOLO ADMIN) -->
+                <!-- CONFIGURACION CAPITAL (SOLO ADMIN) -->
                 <div class="card hidden" id="admin-settings-card" style="max-width: 600px; margin: 0 auto; border: 2px solid #53515a;">
                     <h3 style="color: #53515a;">Administración de Capital</h3>
                     <p class="text-sm" style="margin-bottom: 15px;">Ajuste el capital global de la empresa. Esto afecta la disponibilidad de compra de mercancía.</p>
@@ -934,6 +924,22 @@
                     <button type="submit" class="action-btn">Actualizar Capital</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL: DETALLES REMISION -->
+    <div id="modal-remission-details" class="modal-overlay hidden">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>Detalle de Remisión</h3>
+                <button class="close-modal" onclick="app.closeModal('remission-details')">&times;</button>
+            </div>
+            <div id="remission-details-content">
+                <!-- Contenido dinámico -->
+            </div>
+            <div class="modal-actions">
+                <button class="action-btn secondary" onclick="app.closeModal('remission-details')">Cerrar</button>
+            </div>
         </div>
     </div>
 
@@ -1120,7 +1126,6 @@
             saveNotifications: (data) => localStorage.setItem('alv_notifications', JSON.stringify(data)),
             addNotification: (targetUser, message) => {
                 const notifs = DB.getNotifications();
-                // Si es admin, le enviamos a todos los admins
                 const targets = targetUser === 'ADMIN' 
                     ? DB.getUsers().filter(u => u.role === 'ADMIN').map(u => u.user)
                     : [targetUser];
@@ -1153,7 +1158,6 @@
             getMovements: () => JSON.parse(localStorage.getItem('alv_movements')) || [],
             saveMovements: (data) => localStorage.setItem('alv_movements', JSON.stringify(data)),
             
-            // Reportes de cierre
             getClosingReports: () => JSON.parse(localStorage.getItem('alv_closing_reports')) || [],
             saveClosingReport: (report) => {
                 const reports = DB.getClosingReports();
@@ -1161,7 +1165,6 @@
                 localStorage.setItem('alv_closing_reports', JSON.stringify(reports));
             },
 
-            // CAPITAL (NUEVO)
             getCapital: () => parseFloat(localStorage.getItem('alv_capital')) || 0,
             updateCapital: (amount) => localStorage.setItem('alv_capital', parseFloat(amount)),
 
@@ -1171,7 +1174,6 @@
                 if (!localStorage.getItem('alv_movements')) localStorage.setItem('alv_movements', JSON.stringify([]));
                 if (!localStorage.getItem('alv_notifications')) localStorage.setItem('alv_notifications', JSON.stringify([]));
                 if (!localStorage.getItem('alv_closing_reports')) localStorage.setItem('alv_closing_reports', JSON.stringify([]));
-                // Inicializar capital si no existe (opcional, empieza en 0)
                 if(localStorage.getItem('alv_capital') === null) localStorage.setItem('alv_capital', '0');
             }
         };
@@ -1195,7 +1197,6 @@
                 document.getElementById('form-pos-checkout').onsubmit = app.finalizePosSale;
                 document.getElementById('form-user').onsubmit = app.handleSaveUser;
 
-                // Set default date for closing
                 document.getElementById('closing-date').valueAsDate = new Date();
 
                 const logoImg = document.querySelector('.logo img');
@@ -1293,7 +1294,6 @@
                 setVisibility('nav-dashboard', role === 'ADMIN');
                 setVisibility('nav-sales', role === 'ADMIN');
                 
-                // Secciones para Gerentes y Admins
                 setVisibility('nav-closing', role === 'ADMIN' || role === 'GERENTE');
                 setVisibility('nav-remissions', role === 'ADMIN' || role === 'GERENTE');
                 setVisibility('nav-closing-reports', role === 'ADMIN');
@@ -1346,7 +1346,6 @@
                 if (sectionId === 'settings') app.renderSettings();
             },
 
-            // --- LOGICA CIERRE DE CAJA ---
             loadClosingData: () => {
                 document.getElementById('closing-result-box').style.display = 'none';
                 document.getElementById('closing-discrepancy-report').classList.add('hidden');
@@ -1359,7 +1358,6 @@
                 const userWh = app.currentUser.warehouse;
                 const movements = DB.getMovements();
 
-                // Calcular esperados (SOLO para este almacén)
                 const expected = { EFECTIVO: 0, TRANSFERENCIA: 0, TARJETA_CREDITO: 0, count: 0 };
                 
                 movements.forEach(m => {
@@ -1498,7 +1496,6 @@
                 }
             },
 
-            // --- RENDERIZADO DE REPORTES (ADMIN) ---
             renderClosingReports: () => {
                 const reports = DB.getClosingReports();
                 const tbody = document.getElementById('closing-reports-body');
@@ -1509,7 +1506,6 @@
                     return;
                 }
 
-                // Ordenar por fecha descendente
                 const sorted = [...reports].sort((a,b) => new Date(b.date) - new Date(a.date));
 
                 sorted.forEach(r => {
@@ -1536,24 +1532,23 @@
                 });
             },
 
-            // --- RENDERIZADO DE REMISIONES ---
+            // --- RENDERIZADO DE REMISIONES (CON DETALLES) ---
             renderRemissions: () => {
                 const movements = DB.getMovements();
                 const userWh = app.currentUser.warehouse;
                 const role = app.currentUser.role;
                 
-                // Filtrar solo movimientos tipo REMISION
                 const remissions = movements.filter(m => m.type === 'REMISION');
                 
                 const tbody = document.getElementById('remissions-table-body');
                 tbody.innerHTML = '';
 
                 if(remissions.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#777;">No hay remisiones registradas.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#777;">No hay remisiones registradas.</td></tr>';
                     return;
                 }
 
-                // Filtrar por permisos: Admin ve todo, Gerente ve las de su almacén (origen o destino)
+                // Filtrar: Admin ve todo. Gerente ve las de su almacén (origen o destino).
                 const visibleRemissions = remissions.filter(r => {
                     if (role === 'ADMIN') return true;
                     if (r.fromWarehouse === userWh || r.toWarehouse === userWh) return true;
@@ -1568,17 +1563,93 @@
                         <td>${date}</td>
                         <td>${r.fromWarehouse}</td>
                         <td>${r.toWarehouse}</td>
+                        <td>${r.requesterName || r.userName || 'N/A'}</td>
                         <td>${r.items.length} Equipo(s)</td>
-                        <td>${r.userName || r.user}</td>
+                        <td>
+                            <button class="action-btn secondary" onclick="app.openRemissionDetails(${r.id})">
+                                <i class="fas fa-eye"></i> Ver Detalles
+                            </button>
+                        </td>
                     `;
                     tbody.appendChild(tr);
                 });
             },
 
-            // --- CAPITAL LOGIC ---
+            openRemissionDetails: (id) => {
+                const movement = DB.getMovements().find(m => m.id === id);
+                if (!movement) return;
+
+                const content = document.getElementById('remission-details-content');
+                let itemsHtml = '';
+                (movement.items || []).forEach(item => {
+                    itemsHtml += `
+                        <tr>
+                            <td>${item.brand} ${item.model}</td>
+                            <td>${item.serial}</td>
+                            <td>${Utils.formatCurrency(item.cost)}</td>
+                        </tr>
+                    `;
+                });
+
+                content.innerHTML = `
+                    <div class="flex gap-2" style="margin-bottom:20px;">
+                        <div>
+                            <span style="color:#777; font-size:0.8rem;">ID Remisión</span>
+                            <div style="font-weight:bold; font-size:1.1rem;">${movement.remissionId}</div>
+                        </div>
+                        <div>
+                            <span style="color:#777; font-size:0.8rem;">Fecha</span>
+                            <div style="font-weight:bold;">${new Date(movement.date).toLocaleString()}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:20px; background:#f9f9f9; padding:15px; border-radius:8px;">
+                        <div>
+                            <span style="color:#777; font-size:0.8rem;">De Almacén</span>
+                            <div style="font-weight:bold;">${movement.fromWarehouse}</div>
+                        </div>
+                        <div>
+                            <span style="color:#777; font-size:0.8rem;">A Almacén</span>
+                            <div style="font-weight:bold;">${movement.toWarehouse}</div>
+                        </div>
+                        <div>
+                            <span style="color:#777; font-size:0.8rem;">Solicitado Por</span>
+                            <div style="font-weight:bold;">${movement.requesterName || movement.userName}</div>
+                        </div>
+                         <div>
+                            <span style="color:#777; font-size:0.8rem;">Aprobado Por</span>
+                            <div style="font-weight:bold;">${movement.userName}</div>
+                        </div>
+                    </div>
+
+                    <h4 style="margin-bottom:10px;">Equipos Enviados</h4>
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr style="background:#eee;">
+                                <th style="padding:8px;">Equipo</th>
+                                <th style="padding:8px;">Serial</th>
+                                <th style="padding:8px;">Costo</th>
+                            </tr>
+                        </thead>
+                        <tbody>${itemsHtml}</tbody>
+                    </table>
+
+                    ${movement.notes ? `<div style="margin-top:15px; padding:10px; background:#fff3e0; border-radius:8px;"><strong>Observaciones:</strong> ${movement.notes}</div>` : ''}
+                `;
+                app.openModal('remission-details');
+            },
+
             renderSettings: () => {
                 const cap = DB.getCapital();
-                document.getElementById('settings-current-capital').textContent = Utils.formatCurrency(cap);
+                const card = document.getElementById('admin-settings-card');
+                const capitalText = document.getElementById('settings-current-capital');
+
+                if(app.currentUser.role === 'ADMIN') {
+                    card.classList.remove('hidden');
+                    capitalText.textContent = Utils.formatCurrency(cap);
+                } else {
+                    card.classList.add('hidden');
+                }
             },
 
             handleCapitalAdjustment: (e) => {
@@ -1590,10 +1661,9 @@
                 Utils.showToast('Capital actualizado correctamente');
                 app.closeModal('admin-capital');
                 app.renderSettings();
-                app.renderDashboard(); // Actualizar dashboard si esta abierto
+                app.renderDashboard(); 
             },
 
-            // --- SECCION USUARIOS ---
             renderUsers: () => {
                 const users = DB.getUsers();
                 const tbody = document.getElementById('users-table-body');
@@ -1747,21 +1817,6 @@
                     },
                     options: { responsive: true, maintainAspectRatio: false }
                 });
-
-                const brandCounts = {};
-                movements.forEach(s => { 
-                    if(s.newStatus === 'VENDIDO' && (userWh === 'ALL' || s.warehouse === userWh)) {
-                        brandCounts[s.brand] = (brandCounts[s.brand] || 0) + 1; 
-                    }
-                });
-
-                const ctxB = document.getElementById('chart-brands').getContext('2d');
-                if(app.charts.brands) app.charts.brands.destroy();
-                app.charts.brands = new Chart(ctxB, {
-                    type: 'bar',
-                    data: { labels: Object.keys(brandCounts), datasets: [{ label: 'Ventas', data: Object.values(brandCounts), backgroundColor: '#53515a' }] },
-                    options: { responsive: true, maintainAspectRatio: false }
-                });
             },
 
             renderRequests: () => {
@@ -1809,7 +1864,6 @@
                 if(idx === -1) return;
 
                 if(approved) {
-                    // 1. Generar Remisión
                     const remissionId = Utils.generateRemissionId();
                     const item = inv[idx];
                     const movements = DB.getMovements();
@@ -1823,12 +1877,13 @@
                         userName: app.currentUser.name,
                         fromWarehouse: item.warehouse,
                         toWarehouse: item.request.requesterWarehouse,
+                        requesterName: item.request.requesterName, // Guardar nombre solicitante
+                        requesterUser: item.request.requesterUser,     // Guardar usuario solicitante
                         items: [ { serial: item.serial, brand: item.brand, model: item.model, cost: item.cost } ],
                         notes: `Préstamo aprobado solicitado por ${item.request.requesterName}`
                     });
                     DB.saveMovements(movements);
 
-                    // 2. Actualizar estado
                     inv[idx].request.status = 'APPROVED';
                     
                     Utils.showToast(`Solicitud Aprobada. Remisión ${remissionId} generada.`);
@@ -1954,7 +2009,6 @@
                 else group.classList.add('hidden');
             },
 
-            // --- LOGICA DE VENTAS (AFECTA CAPITAL) ---
             finalizePosSale: (e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
@@ -1993,7 +2047,6 @@
 
                 const transactionWarehouse = app.currentUser.warehouse === 'ALL' ? (itemsSold[0]?.originalWarehouse || 'ALVAGARA') : app.currentUser.warehouse;
 
-                // MOVIMIENTO DE VENTA
                 movements.push({
                     id: mainMovementId,
                     date: new Date().toISOString(),
@@ -2038,7 +2091,7 @@
                 cards.forEach(c => c.style.display = c.innerText.toLowerCase().includes(txt.toLowerCase()) ? 'block' : 'none');
             },
 
-            // --- INVENTORY LOGIC (VERIFICA CAPITAL) ---
+            // --- INVENTORY LOGIC (CORREGIDO CROSS-WAREHOUSE) ---
             renderInventory: () => {
                 const list = DB.getInventory();
                 const tbody = document.getElementById('inventory-table-body');
@@ -2053,8 +2106,9 @@
                     const matchSearch = item.serial.toLowerCase().includes(search) || item.brand.toLowerCase().includes(search) || item.model.toLowerCase().includes(search);
                     const matchStatus = statusFilter ? item.status === statusFilter : true;
                     
+                    // CAMBIO: Permite ver items de OTROS almacenes para poder solicitarlos
                     if(role === 'ADMIN') return matchSearch && matchStatus;
-                    if(role === 'GERENTE') return item.warehouse === userWh && matchSearch && matchStatus;
+                    if(role === 'GERENTE') return matchSearch && matchStatus; // Removida restricción de warehouse
                     if(role === 'VENDEDOR') return matchSearch && matchStatus; 
                     
                     return false;
@@ -2071,28 +2125,29 @@
 
                     let actions = '';
                     
+                    // Acciones según propiedad
                     if (role === 'ADMIN' || (role === 'GERENTE' && isMyWarehouse)) {
+                        // Si es mi almacén, puedo editar/ver estado
                         actions += `<button class="action-btn secondary" onclick="app.openStatusModal('${item.serial}')"><i class="fas fa-exchange-alt"></i></button>`;
                     } 
-                    else if (role === 'VENDEDOR') {
-                        if(isMyWarehouse) {
-                        } else {
-                            if(item.status === 'EN_INVENTORY') {
-                                if(!item.request || item.request.status === 'REJECTED') {
-                                    actions += `<button class="action-btn" onclick="app.requestItem('${item.serial}')" title="Solicitar a otro almacén"><i class="fas fa-hand-holding"></i> Solicitar</button>`;
-                                } else if (item.request?.status === 'REQUESTED') {
+                    else if (role === 'VENDEDOR' || (role === 'GERENTE' && !isMyWarehouse)) {
+                        // Si NO es mi almacén (o soy vendedor), quiero solicitar
+                        if(item.status === 'EN_INVENTORY') {
+                            if(!item.request || item.request.status === 'REJECTED') {
+                                actions += `<button class="action-btn" onclick="app.requestItem('${item.serial}')" title="Solicitar a otro almacén"><i class="fas fa-hand-holding"></i> Solicitar</button>`;
+                            } else if (item.request?.status === 'REQUESTED') {
+                                if(item.request.requesterUser === app.currentUser.user) {
                                     actions += `<span style="font-size:0.8rem; color:#f39c12;">En espera</span>`;
-                                } else if (item.request?.status === 'APPROVED') {
-                                    if(item.request.requesterUser === app.currentUser.user) {
-                                        actions += `<span style="font-size:0.8rem; color:green;">Disponible</span>`;
-                                    } else {
-                                        actions += `<span style="font-size:0.8rem; color:#777;">Otro</span>`;
-                                    }
+                                }
+                            } else if (item.request?.status === 'APPROVED') {
+                                if(item.request.requesterUser === app.currentUser.user) {
+                                    actions += `<span style="font-size:0.8rem; color:green;">Disponible</span>`;
                                 }
                             }
                         }
                     }
 
+                    // Si es mi almacén y tengo solicitudes pendientes, debo aprobar/rechazar
                     if(isMyWarehouse && item.request?.status === 'REQUESTED') {
                         actions += ` <button class="action-btn success" onclick="app.resolveRequest('${item.serial}', true)" title="Aprobar"><i class="fas fa-check"></i></button>`;
                         actions += ` <button class="action-btn danger" onclick="app.resolveRequest('${item.serial}', false)" title="Rechazar"><i class="fas fa-times"></i></button>`;
@@ -2130,7 +2185,6 @@
                 }
             },
 
-            // --- AGREGAR ITEM (VERIFICA CAPITAL) ---
             handleAddItem: (e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
@@ -2321,7 +2375,6 @@
                 app.renderInventory();
             },
 
-            // --- SALES & REPORTES ---
             renderSales: () => {
                 const movements = DB.getMovements();
                 let totalRevenue = 0, totalProfit = 0, profitToday = 0;
