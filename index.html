@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALVAGARA - Sistema de Gestión</title>
+    <title>ALVAGARA - Sistema gerencial</title>
     <!-- Librería para manejo de Excel -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <!-- Iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" href="images/ALVAGARA-copia.png" type="image/png">
+    <link rel="icon" href="images/ALVAGARA - copia.png" type="image/png">
     <!-- LIBRERÍA: Gráficos Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        /* ================= ESTILOS ORIGINALES (LOGIN) ================= */
+        /* ================= ESTILOS GENERALES ================= */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -38,22 +38,17 @@
             background: white; padding: 15px 20px; border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 10px;
             border-left: 5px solid #333; animation: slideIn 0.3s ease-out;
-            display: flex; align-items: center; gap: 10px;
+            display: flex; align-items: center; gap: 10px; max-width: 350px;
         }
         .toast.success { border-left-color: #2ecc71; }
         .toast.error { border-left-color: #e74c3c; }
+        .toast.info { border-left-color: #3498db; }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
         /* ================= ESTILOS LOGIN ================= */
         .login-wrapper {
             display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px;
         }
-        .input-wrapper input {
-            background-color: #eeeeee; border: none; padding: 1rem; font-size: 1rem;
-            width: 13em; border-radius: 1rem; color: lightcoral;
-            box-shadow: 0 0.4rem #616161; cursor: pointer;
-        }
-        .input-wrapper input:focus { outline-color: lightcoral; }
         .login-container {
             background: white; border-radius: 30px; padding: 60px 80px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -72,6 +67,7 @@
             width: 100%; padding: 18px 25px; border: none; border-radius: 50px;
             background-color: #e8e8e8; font-size: 16px; outline: none; transition: background-color 0.3s;
         }
+        input:disabled, select:disabled { background-color: #ddd; color: #777; cursor: not-allowed; }
         input:focus, select:focus { background-color: #d8d8d8; }
         .forgot-password { text-align: center; margin-top: 20px; }
         .forgot-password a { color: #000; text-decoration: none; font-size: 16px; }
@@ -100,8 +96,7 @@
             display: flex; flex-direction: column; z-index: 10; transition: transform 0.3s ease;
         }
         .sidebar-header { padding: 20px; text-align: center; border-bottom: 1px solid #eee; }
-        .sidebar-header img { width: 80px; }
-        .nav-links { flex: 1; padding: 20px 0; list-style: none; }
+        .nav-links { flex: 1; padding: 20px 0; list-style: none; overflow-y: auto; }
         .nav-item {
             padding: 15px 25px; cursor: pointer; color: #555; transition: 0.3s;
             display: flex; align-items: center; gap: 10px; font-size: 1rem;
@@ -119,7 +114,7 @@
         .page-title { font-size: 24px; font-weight: 600; color: #333; }
 
         .card-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 20px; margin-bottom: 30px;
         }
         .card {
@@ -134,15 +129,15 @@
             background: white; border-radius: 15px; padding: 20px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow-x: auto;
         }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background-color: #f8f9fa; color: #555; font-weight: 600; }
+        th { background-color: #f8f9fa; color: #555; font-weight: 600; white-space: nowrap; }
         tr:hover { background-color: #fcfcfc; }
 
         /* Status Badges */
         .badge {
             padding: 5px 12px; border-radius: 20px; font-size: 12px;
-            font-weight: bold; text-transform: uppercase;
+            font-weight: bold; text-transform: uppercase; display: inline-block;
         }
         .badge.EN_INVENTORY { background: #e3f2fd; color: #1976d2; }
         .badge.VENDIDO { background: #e8f5e9; color: #2e7d32; }
@@ -150,6 +145,14 @@
         .badge.EN_REPARACION { background: #fce4ec; color: #c2185b; }
         .badge.PERDIDO { background: #ffebee; color: #c62828; }
         .badge.EN_GARANTIA { background: #f3e5f5; color: #7b1fa2; }
+        .badge.REQUESTED { background: #fff9c4; color: #fbc02d; border: 1px solid #fbc02d; }
+        .badge.APPROVED { background: #e8f5e9; color: #2e7d32; border: 1px solid #2e7d32; }
+        .badge.REJECTED { background: #ffebee; color: #c62828; border: 1px solid #c62828; }
+        
+        /* Remision Badge */
+        .badge.REMISION { background: #e0f7fa; color: #006064; border: 1px solid #006064; }
+        .badge.OK { background: #d4edda; color: #155724; }
+        .badge.DISCREPANCY { background: #f8d7da; color: #721c24; }
 
         /* Buttons & Inputs in Dashboard */
         .action-btn {
@@ -158,6 +161,8 @@
         }
         .action-btn:hover { background: #333; }
         .action-btn.secondary { background: #e0e0e0; color: #333; }
+        .action-btn.danger { background: #e74c3c; }
+        .action-btn.success { background: #2ecc71; }
         
         .controls-row { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
         .search-input { flex: 1; padding: 10px 20px !important; min-width: 200px !important; border-radius: 10px !important; }
@@ -177,40 +182,9 @@
         .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
         .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
 
-        /* ================= ESTILOS DETALLES DE VENTA (MINI VENTANA) ================= */
-        .detail-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;
-        }
-        .detail-card {
-            background: #f9f9f9; padding: 15px; border-radius: 10px; border: 1px solid #eee;
-        }
-        .detail-label { font-size: 0.8rem; color: #777; margin-bottom: 4px; text-transform: uppercase; }
-        .detail-value { font-weight: 600; color: #333; }
-
-        .sale-items-table {
-            width: 100%; border-collapse: collapse; margin-top: 10px;
-            font-size: 0.9rem;
-        }
-        .sale-items-table th {
-            background: #53515a; color: white; padding: 10px;
-            text-align: left; font-size: 0.8rem; text-transform: uppercase;
-        }
-        .sale-items-table td {
-            padding: 10px; border-bottom: 1px solid #eee;
-        }
-        .sale-items-table tr:nth-child(even) { background-color: #f8f9fa; }
-        
-        .total-row {
-            display: flex; justify-content: space-between; align-items: flex-end;
-            margin-top: 20px; padding-top: 20px; border-top: 2px dashed #ccc;
-        }
-        .total-big { font-size: 1.5rem; font-weight: bold; color: #53515a; }
-
-        /* Checkbox personalizado */
         .checkbox-wrapper { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; cursor: pointer; }
         .custom-checkbox { width: 20px; height: 20px; accent-color: #53515a; }
 
-        /* Contenedores de gráficos */
         .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
         .chart-container { position: relative; height: 300px; width: 100%; }
 
@@ -244,6 +218,7 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
         .product-price { font-weight: 700; margin-top: 8px; color: #53515a; }
+        .product-wh-warehouse { font-size: 0.7rem; background: #eee; padding: 2px 6px; border-radius: 4px; margin-top: 5px; display: inline-block; }
 
         /* Items del Carrito */
         .cart-item {
@@ -254,8 +229,22 @@
         .cart-item-info p { font-size: 0.8rem; color: #888; }
         .btn-remove { color: #e74c3c; background: none; border: none; cursor: pointer; padding: 5px; }
 
-        /* ================= DISEÑOS PERSONALIZADOS (Toggle & Import) ================= */
-        /* 1. TOGGLE HEART */
+        /* ================= SECCIONES NUEVAS ================= */
+        /* Cierre de Caja */
+        .closing-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;
+        }
+        .closing-card {
+            background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .closing-status-box {
+            margin-top: 15px; padding: 15px; border-radius: 10px; text-align: center; font-weight: bold;
+            display: none;
+        }
+        .status-match { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status-diff { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        /* DISEÑOS PERSONALIZADOS */
         #auto-backup-toggle { display: none; }
         .love-heart, .love-heart::after {
             border-color: hsl(231deg 28% 86%); border: 1px solid;
@@ -294,7 +283,6 @@
             border-color: hsl(231deg 28% 86%); left: -1px; top: 5px; border-radius: 0px 0px 0px 5px;
         }
 
-        /* 2. BOTON UPLOAD */
         .btn-upload-styled {
             font-family: inherit; font-size: 20px; background: #212121; color: white;
             fill: rgb(155, 153, 153); padding: 0.7em 1em; padding-left: 0.9em;
@@ -306,7 +294,6 @@
         .btn-upload-styled:hover { background: #000; }
         .btn-upload-styled:hover .svg-wrapper { transform: scale(1.25); transition: 0.5s linear; }
         .btn-upload-styled:hover svg { transform: translateX(1.2em) scale(1.1); fill: #fff; }
-        .btn-upload-styled:hover span { opacity: 0; transition: 0.5s linear; }
         .btn-upload-styled:active { transform: scale(0.95); }
 
         /* ================= ESTILOS FACTURA (PRINT) ================= */
@@ -314,16 +301,6 @@
             display: none; background: white; padding: 40px; max-width: 800px;
             margin: 0 auto; box-shadow: 0 0 20px rgba(0,0,0,0.1);
         }
-        .invoice-header {
-            display: flex; justify-content: space-between; border-bottom: 2px solid #53515a;
-            padding-bottom: 20px; margin-bottom: 30px;
-        }
-        .invoice-details { margin-bottom: 30px; }
-        .invoice-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-        .invoice-table th { background: #f0f0f0; color: #333; border-bottom: 1px solid #ddd; padding: 10px; text-align: left; }
-        .invoice-table td { border-bottom: 1px solid #eee; padding: 10px; }
-        .invoice-total { text-align: right; font-size: 1.5rem; font-weight: bold; color: #53515a; }
-
         @media print {
             body * { visibility: hidden; }
             #invoice-print-area, #invoice-print-area * { visibility: visible; }
@@ -336,7 +313,6 @@
             .sidebar { position: fixed; left: -260px; height: 100%; box-shadow: 10px 0 20px rgba(0,0,0,0.1); }
             .sidebar.active { left: 0; }
             .mobile-header { display: flex; }
-            
             table,thead, tbody, th, td, tr { display: block; }
             thead tr { position: absolute; top: -9999px; left: -9999px; }
             tr {
@@ -360,7 +336,7 @@
             }
             .pos-cart.open { transform: translateY(0); height: 80vh; }
             .pos-header { cursor: pointer; display: flex; justify-content: space-between; }
-            .detail-grid { grid-template-columns: 1fr; }
+            .closing-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -382,6 +358,7 @@
                 <h2 style="color: #333; margin-bottom: 5px;">FACTURA ELECTRÓNICA</h2>
                 <p id="inv-date" style="font-weight: bold;"></p>
                 <p id="inv-id" style="font-family: monospace; color: #777;"></p>
+                <p id="inv-wh" style="font-size: 0.9rem; color: #777;"></p>
             </div>
         </div>
 
@@ -423,17 +400,17 @@
             </div>
             
             <h1>Gestión</h1>
-            <h2>base de datos</h2>
+            <h2>Multi-Almacén</h2>
             
             <form id="login-form">
                 <div class="form-group">
                     <label for="usuario">Usuario</label>
-                    <input type="text" id="login-user" placeholder="admin, gerente o empleado" required>
+                    <input type="text" id="login-user" placeholder="Ingrese su usuario" required>
                 </div>
                 
                 <div class="form-group">
                     <label for="contrasena">Contraseña</label>
-                    <input type="password" id="login-pass" placeholder="Igual que el usuario" required>
+                    <input type="password" id="login-pass" placeholder="Contraseña" required>
                 </div>
                 
                 <div class="forgot-password">
@@ -457,25 +434,45 @@
                 <h2 style="font-size: 20px; margin:0;">ALVAGARA</h2>
             </div>
             <ul class="nav-links">
-                <li class="nav-item active" onclick="app.navigate('dashboard')">
+                <li class="nav-item hidden" id="nav-dashboard" onclick="app.navigate('dashboard')">
                     <i class="fas fa-chart-pie"></i> Dashboard
                 </li>
-                <li class="nav-item" onclick="app.navigate('pos')">
+                <li class="nav-item" id="nav-pos" onclick="app.navigate('pos')">
                     <i class="fas fa-cash-register"></i> Punto de Venta
                 </li>
-                <li class="nav-item" onclick="app.navigate('inventory')">
+                <li class="nav-item" id="nav-inventory" onclick="app.navigate('inventory')">
                     <i class="fas fa-boxes"></i> Inventario
                 </li>
-                <li class="nav-item" onclick="app.navigate('sales')">
+                <li class="nav-item" id="nav-requests" onclick="app.navigate('requests')">
+                    <i class="fas fa-hand-holding-heart"></i> Solicitudes
+                </li>
+                <!-- NUEVO: REMISIONES -->
+                <li class="nav-item hidden" id="nav-remissions" onclick="app.navigate('remissions')">
+                    <i class="fas fa-truck"></i> Remisiones
+                </li>
+                <!-- NUEVO: CIERRE DE CAJA (DIARIO) -->
+                <li class="nav-item hidden" id="nav-closing" onclick="app.navigate('closing')">
+                    <i class="fas fa-cash-register"></i> Cierre de Caja
+                </li>
+                <!-- NUEVO: REPORTES DE CAJA (ADMIN) -->
+                <li class="nav-item hidden" id="nav-closing-reports" onclick="app.navigate('closing-reports')">
+                    <i class="fas fa-file-invoice-dollar"></i> Reportes Caja
+                </li>
+                <!-- SECCION USUARIOS (Solo Admin) -->
+                <li class="nav-item hidden" id="nav-users" onclick="app.navigate('users')">
+                    <i class="fas fa-users-cog"></i> Usuarios
+                </li>
+                <li class="nav-item hidden" id="nav-sales" onclick="app.navigate('sales')">
                     <i class="fas fa-chart-line"></i> Ventas y Reportes
                 </li>
-                <li class="nav-item" onclick="app.navigate('settings')">
+                <li class="nav-item" id="nav-settings" onclick="app.navigate('settings')">
                     <i class="fas fa-cog"></i> Configuración
                 </li>
             </ul>
             <div class="user-info">
                 <p><strong>Usuario:</strong> <span id="current-username">-</span></p>
                 <p><strong>Rol:</strong> <span id="current-role">-</span></p>
+                <p><strong>Almacén:</strong> <span id="current-warehouse" style="color:#53515a; font-weight:bold;">-</span></p>
                 <button class="action-btn secondary mt-2" style="width:100%" onclick="app.logout()">Cerrar Sesión</button>
             </div>
         </aside>
@@ -493,7 +490,7 @@
                 <div id="header-actions"></div>
             </header>
 
-            <!-- SECCIÓN: DASHBOARD (Gráficos) -->
+            <!-- SECCIÓN: DASHBOARD (Solo Admin) -->
             <section id="section-dashboard">
                 <div class="card-grid">
                     <div class="card">
@@ -504,23 +501,33 @@
                         <h3>Ganancia Neta</h3>
                         <div class="value" id="kpi-profit" style="color: #2ecc71;">$0.00</div>
                     </div>
+                    <!-- NUEVO: CAPITAL ACTUAL -->
+                    <div class="card hidden" id="card-capital">
+                        <h3 style="color: #53515a;">Capital Actual</h3>
+                        <div class="value" id="kpi-capital" style="color: #333;">$0.00</div>
+                        <small style="color:#888;">Dinero disponible para compras</small>
+                    </div>
                     <div class="card">
-                        <h3>Productos en Stock</h3>
+                        <h3>Stock Mi Almacén</h3>
                         <div class="value" id="kpi-stock">0</div>
+                    </div>
+                    <div class="card">
+                        <h3>Solicitudes Pendientes</h3>
+                        <div class="value" id="kpi-requests" style="color: #fbc02d;">0</div>
                     </div>
                 </div>
 
                 <div class="charts-row">
                     <div class="card">
-                        <h3>Ventas por Marca</h3>
+                        <h3>Ventas por Método de Pago</h3>
                         <div class="chart-container">
-                            <canvas id="chart-brands"></canvas>
+                            <canvas id="chart-payment"></canvas>
                         </div>
                     </div>
                     <div class="card">
-                        <h3>Rendimiento (Demo)</h3>
+                        <h3>Ventas por Marca</h3>
                         <div class="chart-container">
-                            <canvas id="chart-trend"></canvas>
+                            <canvas id="chart-brands"></canvas>
                         </div>
                     </div>
                 </div>
@@ -532,6 +539,11 @@
                     <div class="pos-products">
                         <div class="controls-row">
                             <input type="text" class="search-input" placeholder="Buscar producto..." onkeyup="app.filterPos(this.value)">
+                            <div style="font-size: 0.9rem; color: #666; display: flex; align-items: center;">
+                                <span style="display:inline-block; width:10px; height:10px; background:#e3f2fd; margin-right:5px; border-radius:50%; border:1px solid #1976d2;"></span> Mi Almacén
+                                <span style="display:inline-block; width:10px; height:10px; background:#e8f5e9; margin-left:10px; margin-right:5px; border-radius:50%; border:1px solid #2e7d32;"></span> Disponible (Aprobado)
+                                <span style="display:inline-block; width:10px; height:10px; background:#eee; margin-left:10px; margin-right:5px; border-radius:50%;"></span> Otros Almacenes
+                            </div>
                         </div>
                         <div class="product-grid" id="pos-grid"></div>
                     </div>
@@ -565,8 +577,9 @@
                         <option value="VENDIDO">Vendido</option>
                         <option value="PRESTADO">Prestado</option>
                         <option value="EN_REPARACION">En Reparación</option>
+                        <option value="REQUESTED">Solicitados</option>
                     </select>
-                    <button class="action-btn" onclick="app.openModal('add-item')">
+                    <button class="action-btn hidden" id="btn-add-item" onclick="app.openModal('add-item')">
                         <i class="fas fa-plus"></i> Nuevo Equipo
                     </button>
                 </div>
@@ -577,10 +590,10 @@
                             <tr>
                                 <th>Serial</th>
                                 <th>Marca/Modelo</th>
-                                <th>Tipo</th>
+                                <th>Almacén</th>
                                 <th>Costo</th>
                                 <th>Estado</th>
-                                <th>Info Extra</th>
+                                <th>Solicitudes</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -589,13 +602,162 @@
                 </div>
             </section>
 
-            <!-- SECCIÓN: VENTAS Y REPORTES (SOLICITADO) -->
-            <section id="section-sales" class="hidden">
-                <div class="card-grid">
-                    <div class="card">
-                        <h3>Inventario Total (Costo)</h3>
-                        <div class="value" id="kpi-total-cost">$0.00</div>
+            <!-- SECCIÓN: SOLICITUDES -->
+            <section id="section-requests" class="hidden">
+                <div class="card" style="margin-bottom: 20px; border-left: 5px solid #fbc02d;">
+                    <h3 style="color: #d35400; margin:0;">Solicitudes entrantes</h3>
+                    <p style="margin: 5px 0 0 0; color: #666;">Admins ven todas. Gerentes/Vendedores solo ven las de su almacén.</p>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha Solicitud</th>
+                                <th>Solicitante</th>
+                                <th>Almacén Solicitante</th>
+                                <th>Equipo</th>
+                                <th>Serial</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requests-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- SECCIÓN: REMISIONES (NUEVO) -->
+            <section id="section-remissions" class="hidden">
+                <div class="card" style="margin-bottom: 20px; border-left: 5px solid #006064;">
+                    <h3 style="color: #006064; margin:0;">Historial de Remisiones</h3>
+                    <p style="margin: 5px 0 0 0; color: #666;">Registro de traslados entre almacenes aprobados.</p>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID Remisión</th>
+                                <th>Fecha</th>
+                                <th>De Almacén</th>
+                                <th>A Almacén</th>
+                                <th>Items</th>
+                                <th>Responsable</th>
+                            </tr>
+                        </thead>
+                        <tbody id="remissions-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- SECCIÓN: CIERRE DE CAJA (DIARIO) -->
+            <section id="section-closing" class="hidden">
+                <div class="controls-row">
+                    <div>
+                        <label style="font-weight: bold; margin-right: 10px;">Fecha de Cierre:</label>
+                        <input type="date" id="closing-date" class="search-input" style="width: auto; display: inline-block;" onchange="app.loadClosingData()">
                     </div>
+                    <button class="action-btn" onclick="app.processCashClose()"><i class="fas fa-calculator"></i> Procesar Cierre</button>
+                </div>
+
+                <div class="closing-grid">
+                    <!-- Columna Izquierda: Formulario de Ingreso -->
+                    <div class="closing-card">
+                        <h3><i class="fas fa-money-bill-wave"></i> Conteo Físico</h3>
+                        <p class="text-sm" style="margin-bottom: 15px; color: #666;">Ingrese el valor exacto que tiene en cada medio de pago.</p>
+                        
+                        <div class="form-group">
+                            <label>Efectivo en Caja ($)</label>
+                            <input type="number" id="close-cash-physical" placeholder="0.00" step="100">
+                        </div>
+                        <div class="form-group">
+                            <label>Nequi / Transferencias ($)</label>
+                            <input type="number" id="close-nequi-physical" placeholder="0.00" step="100">
+                        </div>
+                        <div class="form-group">
+                            <label>Datafono / Tarjetas ($)</label>
+                            <input type="number" id="close-card-physical" placeholder="0.00" step="100">
+                        </div>
+
+                        <div style="margin-top: 20px; padding: 10px; background: #f9f9f9; border-radius: 8px;">
+                            <label>Observaciones (Opcional)</label>
+                            <textarea id="close-observations" style="width: 100%; height: 80px; padding: 10px; border-radius: 8px; border: 1px solid #ddd; resize: none;" placeholder="Si hubo alguna novedad, descríbala aquí..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Columna Derecha: Comparación -->
+                    <div class="closing-card">
+                        <h3><i class="fas fa-balance-scale"></i> Comparativa Sistema vs. Físico</h3>
+                        
+                        <div id="closing-comparison-area">
+                            <!-- Se llena dinámicamente con JS -->
+                            <div class="text-sm" style="text-align: center; color: #999; padding: 40px;">
+                                Seleccione una fecha y presione "Procesar Cierre"
+                            </div>
+                        </div>
+
+                        <div id="closing-result-box" class="closing-status-box"></div>
+                        
+                        <div id="closing-discrepancy-report" class="hidden" style="margin-top: 20px; padding: 15px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 8px;">
+                            <h4 style="color: #856404; margin-bottom: 5px;"><i class="fas fa-exclamation-triangle"></i> Reporte de Incongruencia</h4>
+                            <p id="discrepancy-text" style="font-size: 0.9rem; color: #856404;"></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECCIÓN: REPORTES DE CAJA (ADMIN) -->
+            <section id="section-closing-reports" class="hidden">
+                <div class="card" style="margin-bottom: 20px; border-left: 5px solid #53515a;">
+                    <h3 style="color: #53515a; margin:0;">Reportes Diarios de Cierre</h3>
+                    <p style="margin: 5px 0 0 0; color: #666;">Consolidado de cierres enviados por cada almacén.</p>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha Cierre</th>
+                                <th>Almacén</th>
+                                <th>Responsable</th>
+                                <th>Estado</th>
+                                <th>Diferencia</th>
+                                <th>Detalle</th>
+                            </tr>
+                        </thead>
+                        <tbody id="closing-reports-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- NUEVA SECCIÓN: USUARIOS (Solo Admin) -->
+            <section id="section-users" class="hidden">
+                <div class="controls-row">
+                    <button class="action-btn" onclick="app.openUserModal()">
+                        <i class="fas fa-user-plus"></i> Nuevo Usuario
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Nombre Completo</th>
+                                <th>Rol</th>
+                                <th>Almacén</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+             <!-- SECCIÓN: VENTAS Y REPORTES -->
+             <section id="section-sales" class="hidden">
+                <div class="card-grid">
                     <div class="card">
                         <h3>Ventas Totales</h3>
                         <div class="value" id="kpi-total-revenue">$0.00</div>
@@ -617,7 +779,9 @@
                             <tr>
                                 <th data-label="Fecha">Fecha</th>
                                 <th data-label="Vendedor">Vendedor</th>
+                                <th data-label="Almacén">Almacén</th>
                                 <th data-label="Cliente">Cliente</th>
+                                <th data-label="Método">Método</th>
                                 <th data-label="Venta">Precio Venta</th>
                                 <th data-label="Acciones">Acciones</th>
                             </tr>
@@ -629,7 +793,7 @@
 
              <!-- SECCIÓN: CONFIGURACIÓN -->
              <section id="section-settings" class="hidden">
-                <div class="card" style="max-width: 600px; margin: 0 auto;">
+                <div class="card" style="max-width: 600px; margin: 0 auto; margin-bottom: 20px;">
                     <h3>Respaldo y Migración</h3>
                     
                     <div class="flex items-center" style="margin-bottom: 30px; padding: 15px; background: #f9f9f9; border-radius: 12px;">
@@ -654,6 +818,21 @@
                         </label>
                     </div>
                 </div>
+
+                <!-- NUEVO: CONFIGURACION CAPITAL (SOLO ADMIN) -->
+                <div class="card hidden" id="admin-settings-card" style="max-width: 600px; margin: 0 auto; border: 2px solid #53515a;">
+                    <h3 style="color: #53515a;">Administración de Capital</h3>
+                    <p class="text-sm" style="margin-bottom: 15px;">Ajuste el capital global de la empresa. Esto afecta la disponibilidad de compra de mercancía.</p>
+                    
+                    <div class="flex justify-between items-center" style="background:#f9f9f9; padding:15px; border-radius:10px; margin-bottom:15px;">
+                        <span>Capital Actual Registrado:</span>
+                        <strong id="settings-current-capital" style="font-size:1.2rem;">$0.00</strong>
+                    </div>
+
+                    <button class="action-btn" onclick="app.openModal('admin-capital')">
+                        <i class="fas fa-coins"></i> Ajustar / Inyectar Capital
+                    </button>
+                </div>
             </section>
         </main>
     </div>
@@ -666,10 +845,22 @@
                 <div class="form-group"><label>Serial (Único)</label><input type="text" name="serial" required></div>
                 <div class="form-group"><label>Marca</label><input type="text" name="brand" placeholder="Samsung, Apple..." required></div>
                 <div class="form-group"><label>Modelo</label><input type="text" name="model" placeholder="S23 Ultra, iPhone 14..." required></div>
+                
                 <div class="flex gap-2">
                     <div class="form-group" style="flex:1"><label>Tipo</label><select name="type"><option value="CELULAR">Celular</option><option value="TABLET">Tablet</option><option value="LAPTOP">Laptop</option><option value="ACCESORIO">Accesorio</option></select></div>
-                    <div class="form-group" style="flex:1"><label>Costo Compra</label><input type="number" name="cost" step="0.01" required></div>
+                    <div class="form-group" style="flex:1">
+                        <label>Almacén Destino</label>
+                        <select name="warehouse" id="add-warehouse-select" required>
+                            <option value="ALVAGARA">ALVAGARA (Principal)</option>
+                            <option value="ALVAGARA - OFICINA">ALVAGARA - OFICINA</option>
+                            <option value="Boutique Móvil">Boutique Móvil</option>
+                        </select>
+                        <small style="color:#d35400" id="wh-locked-msg" class="hidden">Bloqueado a tu almacén</small>
+                    </div>
                 </div>
+                
+                <div class="form-group"><label>Costo Compra (Afecta Capital)</label><input type="number" name="cost" step="0.01" required></div>
+                
                 <div class="modal-actions">
                     <button type="button" class="action-btn secondary" onclick="app.closeModal('add-item')">Cancelar</button>
                     <button type="submit" class="action-btn">Guardar</button>
@@ -678,19 +869,93 @@
         </div>
     </div>
 
-    <!-- MODAL: ACTUALIZAR ESTADO -->
+    <!-- MODAL: USUARIO -->
+    <div id="modal-user-form" class="modal-overlay hidden">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header"><h3>Gestión de Usuario</h3><button class="close-modal" onclick="app.closeModal('user-form')">&times;</button></div>
+            <form id="form-user">
+                <input type="hidden" name="originalUser" id="user-original">
+                
+                <div class="form-group">
+                    <label>Usuario (Login)</label>
+                    <input type="text" name="user" id="user-login" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Nombre Completo</label>
+                    <input type="text" name="name" id="user-name" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" name="pass" id="user-pass" placeholder="Dejar vacío para mantener">
+                </div>
+
+                <div class="form-group">
+                    <label>Rol</label>
+                    <select name="role" id="user-role">
+                        <option value="ADMIN">ADMIN</option>
+                        <option value="GERENTE">GERENTE</option>
+                        <option value="VENDEDOR">VENDEDOR</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Almacén Asignado</label>
+                    <select name="warehouse" id="user-warehouse">
+                        <option value="ALL">TODOS (Admin)</option>
+                        <option value="ALVAGARA">ALVAGARA (Principal)</option>
+                        <option value="ALVAGARA - OFICINA">ALVAGARA - OFICINA</option>
+                        <option value="Boutique Móvil">Boutique Móvil</option>
+                    </select>
+                    <small style="color:#e67e22" id="warehouse-change-warning" class="hidden">¡Cuidado! Cambiar de almacén notificará al empleado.</small>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="action-btn secondary" onclick="app.closeModal('user-form')">Cancelar</button>
+                    <button type="submit" class="action-btn">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: AJUSTE CAPITAL (ADMIN) -->
+    <div id="modal-admin-capital" class="modal-overlay hidden">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header"><h3>Ajustar Capital Global</h3><button class="close-modal" onclick="app.closeModal('admin-capital')">&times;</button></div>
+            <form onsubmit="app.handleCapitalAdjustment(event)">
+                <p style="margin-bottom: 15px; color: #555;">Ingrese el nuevo monto total de capital disponible en la empresa.</p>
+                <div class="form-group">
+                    <label>Nuevo Monto de Capital ($)</label>
+                    <input type="number" id="new-capital-input" required step="0.01">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="action-btn secondary" onclick="app.closeModal('admin-capital')">Cancelar</button>
+                    <button type="submit" class="action-btn">Actualizar Capital</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ACTUALIZAR ESTADO / REMISIONES -->
     <div id="modal-update-status" class="modal-overlay hidden">
         <div class="modal">
-            <div class="modal-header"><h3>Actualizar Estado</h3><button class="close-modal" onclick="app.closeModal('update-status')">&times;</button></div>
+            <div class="modal-header"><h3>Gestión de Equipo</h3><button class="close-modal" onclick="app.closeModal('update-status')">&times;</button></div>
             <p id="modal-item-info" style="margin-bottom: 15px; font-weight: bold;"></p>
             <form id="form-update-status">
                 <input type="hidden" name="serial" id="status-serial">
                 <input type="hidden" name="current-cost" id="status-cost">
                 
+                <div class="form-group">
+                    <label>Actualizar Costo (Opcional)</label>
+                    <input type="number" name="newCost" id="new-cost-input" placeholder="Dejar vacío para mantener">
+                    <small style="color:#777">El cambio de costo se registrará en el historial.</small>
+                </div>
+
                 <div class="form-group"><label>Nuevo Estado</label><select name="newStatus" id="status-select" onchange="app.toggleStatusFields()" required>
                     <option value="EN_INVENTORY">En Inventario</option>
                     <option value="VENDIDO">Vendido</option>
-                    <option value="PRESTADO">Prestado</option>
+                    <option value="PRESTADO">Prestado / Traslado</option>
                     <option value="EN_GARANTIA">En Garantía</option>
                     <option value="EN_REPARACION">En Reparación</option>
                     <option value="PERDIDO">Perdido</option>
@@ -699,7 +964,6 @@
                 
                 <div id="fields-sale" class="hidden">
                     <div class="form-group"><label>Precio de Venta</label><input type="number" name="salePrice" step="0.01" placeholder="0.00"></div>
-                    
                     <div style="background: #f9f9f9; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
                         <h4 style="margin-bottom: 10px; color: #555;">Datos del Comprador</h4>
                         <div class="form-group"><label>Nombre Completo</label><input type="text" name="buyerName"></div>
@@ -707,13 +971,34 @@
                         <div class="form-group"><label>Email</label><input type="email" name="buyerEmail"></div>
                         <label class="checkbox-wrapper">
                             <input type="checkbox" name="requestInvoice" class="custom-checkbox" id="chk-invoice-inv">
-                            <span>¿Generar Factura Electrónica y enviar correo?</span>
+                            <span>¿Generar Factura Electrónica?</span>
                         </label>
                     </div>
                 </div>
 
                 <div id="fields-loan" class="hidden">
-                    <div class="form-group"><label>Prestado a (Nombre)</label><input type="text" name="loanTo"></div>
+                    <p style="font-size:0.9rem; color:#d35400; margin-bottom:10px;">Nota: Los préstamos entre almacenes generan Remisión automática.</p>
+                    <div class="form-group">
+                        <label>Destino</label>
+                        <select name="loanDestinationType" id="loan-dest-type" onchange="app.toggleLoanDest()" required>
+                            <option value="PERSONA">Persona (Externa)</option>
+                            <option value="ALMACEN">Otro Almacén (Remisión)</option>
+                        </select>
+                    </div>
+                    
+                    <div id="field-loan-person" class="form-group">
+                        <label>Nombre del Solicitante</label>
+                        <input type="text" name="loanTo">
+                    </div>
+
+                    <div id="field-loan-warehouse" class="form-group hidden">
+                        <label>Almacén de Destino</label>
+                        <select name="loanWarehouse" id="loan-warehouse-select">
+                            <option value="ALVAGARA">ALVAGARA</option>
+                            <option value="ALVAGARA - OFICINA">ALVAGARA - OFICINA</option>
+                            <option value="Boutique Móvil">Boutique Móvil</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="modal-actions">
@@ -730,14 +1015,29 @@
             <div class="modal-header"><h3>Finalizar Venta</h3><button class="close-modal" onclick="app.closeModal('pos-checkout')">&times;</button></div>
             <p style="margin-bottom: 15px; color: #555;">Total a cobrar: <span id="pos-checkout-total" style="font-weight: bold; font-size: 1.2rem;"></span></p>
             <form id="form-pos-checkout">
+                <div style="background: #f0f4f8; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                    <h4 style="margin-bottom: 10px; color: #333;">Método de Pago</h4>
+                    <div class="form-group">
+                        <select name="paymentMethod" id="pos-payment-method" onchange="app.toggleInstallments()" required>
+                            <option value="EFECTIVO">Efectivo</option>
+                            <option value="TRANSFERENCIA">Transferencia (Nequi, Daviplata, etc.)</option>
+                            <option value="TARJETA_CREDITO">Tarjeta de Crédito</option>
+                        </select>
+                    </div>
+                    <div id="pos-installments-group" class="form-group hidden">
+                        <label>Número de Cuotas</label>
+                        <input type="number" name="installments" min="1" max="36" value="1">
+                    </div>
+                </div>
+
                 <div style="background: #f9f9f9; padding: 15px; border-radius: 10px;">
-                    <h4 style="margin-bottom: 10px; color: #555;">Datos del Comprador (Opcional)</h4>
+                    <h4 style="margin-bottom: 10px; color: #555;">Datos del Comprador</h4>
                     <div class="form-group"><label>Nombre Completo</label><input type="text" name="buyerName" placeholder="Cliente de mostrador"></div>
                     <div class="form-group"><label>Teléfono</label><input type="tel" name="buyerPhone"></div>
                     <div class="form-group"><label>Email</label><input type="email" name="buyerEmail"></div>
                     <label class="checkbox-wrapper">
                         <input type="checkbox" name="requestInvoice" class="custom-checkbox" id="chk-invoice-pos">
-                        <span>¿Generar Factura Electrónica y enviar correo?</span>
+                        <span>¿Generar Factura Electrónica?</span>
                     </label>
                 </div>
                 <div class="modal-actions">
@@ -750,7 +1050,7 @@
 
     <!-- MODAL: CONFIRMAR PRECIO INDIVIDUAL (POS) -->
     <div id="modal-pos-price" class="modal-overlay hidden">
-        <div class="modal">
+        <div class="modal" style="max-width:400px">
             <div class="modal-header"><h3>Confirmar Precio</h3><button class="close-modal" onclick="app.closeModal('pos-price')">&times;</button></div>
             <p id="modal-pos-desc" style="margin-bottom: 15px;"></p>
             <form onsubmit="app.confirmAddToCart(event)">
@@ -761,11 +1061,11 @@
         </div>
     </div>
 
-    <!-- MODAL: DETALLES DE VENTA (MINI VENTANA AMIGABLE) -->
+    <!-- MODAL: DETALLES DE VENTA / REMISION -->
     <div id="modal-sale-details" class="modal-overlay hidden">
         <div class="modal">
             <div class="modal-header">
-                <h3>Detalle de Venta</h3>
+                <h3 id="detail-modal-title">Detalle de Transacción</h3>
                 <button class="close-modal" onclick="app.closeModal('sale-details')">&times;</button>
             </div>
             <div id="sale-details-content">
@@ -773,7 +1073,7 @@
             </div>
             <div class="modal-actions">
                 <button class="action-btn secondary" onclick="app.closeModal('sale-details')">Cerrar</button>
-                <button class="action-btn" id="btn-invoice-from-details" onclick="app.generateInvoiceFromDetails()">
+                <button class="action-btn hidden" id="btn-invoice-from-details" onclick="app.generateInvoiceFromDetails()">
                     <i class="fas fa-print"></i> Factura
                 </button>
             </div>
@@ -782,30 +1082,97 @@
 
     <script>
         const Utils = {
-            formatCurrency: (num) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(num),
+            formatCurrency: (num) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(num),
+            generateRemissionId: () => 'REM-' + Date.now().toString().slice(-6) + Math.floor(Math.random() * 100),
             showToast: (msg, type = 'success') => {
                 const container = document.getElementById('toast-container');
                 const toast = document.createElement('div');
                 toast.className = `toast ${type}`;
-                toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check' : 'fa-exclamation-circle'}"></i> <span>${msg}</span>`;
+                toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i> <span>${msg}</span>`;
                 container.appendChild(toast);
-                setTimeout(() => toast.remove(), 3000);
+                setTimeout(() => toast.remove(), 5000);
             }
         };
 
+        const WAREHOUSES = ['ALVAGARA', 'ALVAGARA - OFICINA', 'Boutique Móvil'];
+
+        const DEFAULT_USERS = [
+            { user: 'Diego', pass: 'admin', role: 'ADMIN', name: 'Diego Admin', warehouse: 'ALL' },
+            { user: 'Jonny', pass: 'admin', role: 'ADMIN', name: 'Jonny Admin', warehouse: 'ALL' },
+            { user: 'Kate', pass: 'gerente', role: 'GERENTE', name: 'Kate', warehouse: 'ALVAGARA' },
+            { user: 'Ronald', pass: 'gerente', role: 'GERENTE', name: 'Ronald', warehouse: 'ALVAGARA' },
+            { user: 'Vasnessa', pass: 'gerente', role: 'GERENTE', name: 'Vasnessa', warehouse: 'ALVAGARA' },
+            { user: 'Jeison', pass: 'gerente', role: 'GERENTE', name: 'Jeison', warehouse: 'ALVAGARA' },
+            { user: 'Liliana', pass: 'gerente', role: 'GERENTE', name: 'Liliana', warehouse: 'Boutique Móvil' },
+            { user: 'Manuela', pass: 'empleado', role: 'VENDEDOR', name: 'Manuela', warehouse: 'ALVAGARA' },
+            { user: 'Alejandro', pass: 'empleado', role: 'VENDEDOR', name: 'Alejandro', warehouse: 'Boutique Móvil' }
+        ];
+
         const DB = {
-            users: [
-                { user: 'admin', pass: 'admin', role: 'ADMIN', name: 'Administrador' },
-                { user: 'gerente', pass: 'gerente', role: 'GERENTE', name: 'Gerente General' },
-                { user: 'empleado', pass: 'empleado', role: 'EMPLEADO', name: 'Vendedor 1' }
-            ],
+            getUsers: () => {
+                const stored = localStorage.getItem('alv_users');
+                if(stored) return JSON.parse(stored);
+                return DEFAULT_USERS;
+            },
+            saveUsers: (data) => localStorage.setItem('alv_users', JSON.stringify(data)),
+            
+            getNotifications: () => JSON.parse(localStorage.getItem('alv_notifications')) || [],
+            saveNotifications: (data) => localStorage.setItem('alv_notifications', JSON.stringify(data)),
+            addNotification: (targetUser, message) => {
+                const notifs = DB.getNotifications();
+                // Si es admin, le enviamos a todos los admins
+                const targets = targetUser === 'ADMIN' 
+                    ? DB.getUsers().filter(u => u.role === 'ADMIN').map(u => u.user)
+                    : [targetUser];
+
+                targets.forEach(tUser => {
+                    notifs.push({
+                        id: Date.now() + Math.random(),
+                        targetUser: tUser,
+                        message: message,
+                        date: new Date().toISOString(),
+                        read: false
+                    });
+                });
+                DB.saveNotifications(notifs);
+            },
+            markNotificationsRead: (user) => {
+                const notifs = DB.getNotifications();
+                let changed = false;
+                notifs.forEach(n => {
+                    if(n.targetUser === user && !n.read) {
+                        n.read = true;
+                        changed = true;
+                    }
+                });
+                if(changed) DB.saveNotifications(notifs);
+            },
+
             getInventory: () => JSON.parse(localStorage.getItem('alv_inventory')) || [],
             saveInventory: (data) => localStorage.setItem('alv_inventory', JSON.stringify(data)),
             getMovements: () => JSON.parse(localStorage.getItem('alv_movements')) || [],
             saveMovements: (data) => localStorage.setItem('alv_movements', JSON.stringify(data)),
+            
+            // Reportes de cierre
+            getClosingReports: () => JSON.parse(localStorage.getItem('alv_closing_reports')) || [],
+            saveClosingReport: (report) => {
+                const reports = DB.getClosingReports();
+                reports.push(report);
+                localStorage.setItem('alv_closing_reports', JSON.stringify(reports));
+            },
+
+            // CAPITAL (NUEVO)
+            getCapital: () => parseFloat(localStorage.getItem('alv_capital')) || 0,
+            updateCapital: (amount) => localStorage.setItem('alv_capital', parseFloat(amount)),
+
             init: () => {
+                if (!localStorage.getItem('alv_users')) DB.saveUsers(DEFAULT_USERS);
                 if (!localStorage.getItem('alv_inventory')) localStorage.setItem('alv_inventory', JSON.stringify([]));
                 if (!localStorage.getItem('alv_movements')) localStorage.setItem('alv_movements', JSON.stringify([]));
+                if (!localStorage.getItem('alv_notifications')) localStorage.setItem('alv_notifications', JSON.stringify([]));
+                if (!localStorage.getItem('alv_closing_reports')) localStorage.setItem('alv_closing_reports', JSON.stringify([]));
+                // Inicializar capital si no existe (opcional, empieza en 0)
+                if(localStorage.getItem('alv_capital') === null) localStorage.setItem('alv_capital', '0');
             }
         };
 
@@ -817,6 +1184,7 @@
             cart: [],
             charts: {},
             currentMovementForDetails: null,
+            currentClosingData: null, 
 
             init: () => {
                 DB.init();
@@ -825,9 +1193,13 @@
                 document.getElementById('form-add-item').onsubmit = app.handleAddItem;
                 document.getElementById('form-update-status').onsubmit = app.handleUpdateStatus;
                 document.getElementById('form-pos-checkout').onsubmit = app.finalizePosSale;
+                document.getElementById('form-user').onsubmit = app.handleSaveUser;
+
+                // Set default date for closing
+                document.getElementById('closing-date').valueAsDate = new Date();
 
                 const logoImg = document.querySelector('.logo img');
-                logoImg.onerror = () => {
+                if(logoImg) logoImg.onerror = () => {
                     logoImg.style.display = 'none';
                     document.getElementById('text-logo').style.display = 'block';
                 };
@@ -849,19 +1221,33 @@
 
             checkSession: () => {
                 const session = sessionStorage.getItem('alv_session');
-                if (session) { app.currentUser = JSON.parse(session); app.loadDashboard(); }
+                if (session) { 
+                    app.currentUser = JSON.parse(session); 
+                    app.loadDashboard(); 
+                }
                 else { app.showLogin(); }
             },
 
             handleLogin: (e) => {
                 e.preventDefault();
-                const u = document.getElementById('login-user').value.toLowerCase().trim();
+                const u = document.getElementById('login-user').value.trim();
                 const p = document.getElementById('login-pass').value;
-                const userFound = DB.users.find(usr => usr.user === u && usr.pass === p);
+                const users = DB.getUsers();
+                const userFound = users.find(usr => usr.user === u && usr.pass === p);
+                
                 if (userFound) {
                     app.currentUser = userFound;
                     sessionStorage.setItem('alv_session', JSON.stringify(userFound));
-                    Utils.showToast(`Bienvenido ${userFound.name}`);
+                    
+                    const notifs = DB.getNotifications().filter(n => n.targetUser === u && !n.read);
+                    if(notifs.length > 0) {
+                        DB.markNotificationsRead(u);
+                        notifs.forEach(n => {
+                            setTimeout(() => Utils.showToast(n.message, 'info'), 500);
+                        });
+                    }
+
+                    Utils.showToast(`Bienvenido ${userFound.name} (${userFound.warehouse})`);
                     app.loadDashboard();
                 } else { Utils.showToast('Credenciales incorrectas', 'error'); }
             },
@@ -879,14 +1265,49 @@
             loadDashboard: () => {
                 document.getElementById('login-view').classList.add('hidden');
                 document.getElementById('dashboard-view').classList.remove('hidden');
+                
                 document.getElementById('current-username').textContent = app.currentUser.name;
                 document.getElementById('current-role').textContent = app.currentUser.role;
-                
+                document.getElementById('current-warehouse').textContent = app.currentUser.warehouse === 'ALL' ? 'TODOS' : app.currentUser.warehouse;
+
+                app.configureSidebar();
+
                 const toggle = document.getElementById('auto-backup-toggle');
                 if(toggle) toggle.checked = app.autoBackupEnabled;
 
                 if (app.autoBackupEnabled && ['ADMIN', 'GERENTE'].includes(app.currentUser.role)) app.startAutoBackup();
-                app.navigate('dashboard');
+                
+                if(app.currentUser.role === 'VENDEDOR') app.navigate('pos');
+                else if(app.currentUser.role === 'GERENTE') app.navigate('closing'); 
+                else app.navigate('dashboard');
+            },
+
+            configureSidebar: () => {
+                const role = app.currentUser.role;
+                const setVisibility = (id, visible) => {
+                    const el = document.getElementById(id);
+                    if(visible) el.classList.remove('hidden');
+                    else el.classList.add('hidden');
+                };
+
+                setVisibility('nav-dashboard', role === 'ADMIN');
+                setVisibility('nav-sales', role === 'ADMIN');
+                
+                // Secciones para Gerentes y Admins
+                setVisibility('nav-closing', role === 'ADMIN' || role === 'GERENTE');
+                setVisibility('nav-remissions', role === 'ADMIN' || role === 'GERENTE');
+                setVisibility('nav-closing-reports', role === 'ADMIN');
+
+                setVisibility('nav-users', role === 'ADMIN');
+
+                setVisibility('nav-pos', true);
+                setVisibility('nav-inventory', true);
+                setVisibility('nav-requests', true);
+                setVisibility('nav-settings', true);
+
+                const btnAdd = document.getElementById('btn-add-item');
+                if(role === 'VENDEDOR') btnAdd.classList.add('hidden');
+                else btnAdd.classList.remove('hidden');
             },
 
             navigate: (sectionId) => {
@@ -895,10 +1316,21 @@
                 document.getElementById(`section-${sectionId}`).classList.remove('hidden');
                 
                 const navItems = document.querySelectorAll('.nav-item');
-                const indexMap = { 'dashboard': 0, 'pos': 1, 'inventory': 2, 'sales': 3, 'settings': 4 };
+                const indexMap = { 'dashboard': 0, 'pos': 1, 'inventory': 2, 'requests': 3, 'remissions': 4, 'closing': 5, 'closing-reports': 6, 'users': 7, 'sales': 8, 'settings': 9 };
                 if(navItems[indexMap[sectionId]]) navItems[indexMap[sectionId]].classList.add('active');
 
-                const titles = { 'dashboard': 'Dashboard', 'pos': 'Punto de Venta', 'inventory': 'Inventario', 'sales': 'Ventas y Reportes', 'settings': 'Configuración' };
+                const titles = { 
+                    'dashboard': 'Dashboard', 
+                    'pos': 'Punto de Venta', 
+                    'inventory': 'Inventario Multi-Almacén', 
+                    'requests': 'Solicitudes de Préstamo',
+                    'remissions': 'Historial de Remisiones',
+                    'closing': 'Cierre de Caja Diario',
+                    'closing-reports': 'Reportes de Caja Recibidos',
+                    'users': 'Gestión de Usuarios',
+                    'sales': 'Ventas y Reportes', 
+                    'settings': 'Configuración' 
+                };
                 document.getElementById('page-title').textContent = titles[sectionId];
 
                 if(window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('active');
@@ -906,63 +1338,541 @@
                 if (sectionId === 'sales') app.renderSales();
                 if (sectionId === 'dashboard') app.renderDashboard();
                 if (sectionId === 'pos') app.renderPOS();
+                if (sectionId === 'requests') app.renderRequests();
+                if (sectionId === 'users') app.renderUsers();
+                if (sectionId === 'closing') app.loadClosingData();
+                if (sectionId === 'remissions') app.renderRemissions();
+                if (sectionId === 'closing-reports') app.renderClosingReports();
+                if (sectionId === 'settings') app.renderSettings();
+            },
+
+            // --- LOGICA CIERRE DE CAJA ---
+            loadClosingData: () => {
+                document.getElementById('closing-result-box').style.display = 'none';
+                document.getElementById('closing-discrepancy-report').classList.add('hidden');
+                document.getElementById('close-cash-physical').value = '';
+                document.getElementById('close-nequi-physical').value = '';
+                document.getElementById('close-card-physical').value = '';
+                document.getElementById('close-observations').value = '';
+                
+                const dateStr = document.getElementById('closing-date').value; 
+                const userWh = app.currentUser.warehouse;
+                const movements = DB.getMovements();
+
+                // Calcular esperados (SOLO para este almacén)
+                const expected = { EFECTIVO: 0, TRANSFERENCIA: 0, TARJETA_CREDITO: 0, count: 0 };
+                
+                movements.forEach(m => {
+                    if(m.newStatus === 'VENDIDO' && m.date.startsWith(dateStr) && (userWh === 'ALL' || m.warehouse === userWh)) {
+                        expected[m.paymentMethod] = (expected[m.paymentMethod] || 0) + m.salePrice;
+                        expected.count++;
+                    }
+                });
+
+                app.currentClosingData = { expected, dateStr, userWh };
+
+                const container = document.getElementById('closing-comparison-area');
+                container.innerHTML = `
+                    <table style="width:100%; font-size: 0.9rem;">
+                        <thead>
+                            <tr style="background:#f8f9fa;">
+                                <th style="text-align:left; padding:8px;">Método</th>
+                                <th style="text-align:right; padding:8px;">Sistema</th>
+                                <th style="text-align:right; padding:8px;">Físico (Ingresar)</th>
+                                <th style="text-align:right; padding:8px;">Diferencia</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding:10px;"><i class="fas fa-money-bill" style="color:#2ecc71; margin-right:5px;"></i> Efectivo</td>
+                                <td style="text-align:right; font-weight:bold;">${Utils.formatCurrency(expected.EFECTIVO)}</td>
+                                <td style="text-align:right; color:#aaa;">(Ver formulario)</td>
+                                <td style="text-align:right;" id="diff-EFECTIVO">-</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:10px;"><i class="fas fa-mobile-alt" style="color:#3498db; margin-right:5px;"></i> Nequi/Transf.</td>
+                                <td style="text-align:right; font-weight:bold;">${Utils.formatCurrency(expected.TRANSFERENCIA)}</td>
+                                <td style="text-align:right; color:#aaa;">(Ver formulario)</td>
+                                <td style="text-align:right;" id="diff-TRANSFERENCIA">-</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:10px;"><i class="fas fa-credit-card" style="color:#9b59b6; margin-right:5px;"></i> Datafono</td>
+                                <td style="text-align:right; font-weight:bold;">${Utils.formatCurrency(expected.TARJETA_CREDITO)}</td>
+                                <td style="text-align:right; color:#aaa;">(Ver formulario)</td>
+                                <td style="text-align:right;" id="diff-TARJETA_CREDITO">-</td>
+                            </tr>
+                            <tr style="border-top: 2px solid #eee;">
+                                <td style="padding:10px; font-weight:bold;">TOTALES</td>
+                                <td style="text-align:right; font-weight:bold;">${Utils.formatCurrency(expected.EFECTIVO + expected.TRANSFERENCIA + expected.TARJETA_CREDITO)}</td>
+                                <td style="text-align:right; color:#aaa;">-</td>
+                                <td style="text-align:right; font-weight:bold;" id="diff-TOTAL">-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="text-sm" style="margin-top:10px; text-align:center; color:#777;">
+                        Ventas Registradas: ${expected.count}
+                    </div>
+                `;
+            },
+
+            processCashClose: () => {
+                const physicalCash = parseFloat(document.getElementById('close-cash-physical').value) || 0;
+                const physicalNequi = parseFloat(document.getElementById('close-nequi-physical').value) || 0;
+                const physicalCard = parseFloat(document.getElementById('close-card-physical').value) || 0;
+                const observations = document.getElementById('close-observations').value;
+
+                const { expected, dateStr, userWh } = app.currentClosingData;
+                
+                const physical = { EFECTIVO: physicalCash, TRANSFERENCIA: physicalNequi, TARJETA_CREDITO: physicalCard };
+                const diffs = {
+                    EFECTIVO: expected.EFECTIVO - physical.EFECTIVO,
+                    TRANSFERENCIA: expected.TRANSFERENCIA - physical.TRANSFERENCIA,
+                    TARJETA_CREDITO: expected.TARJETA_CREDITO - physical.TARJETA_CREDITO
+                };
+                
+                const totalDiff = diffs.EFECTIVO + diffs.TRANSFERENCIA + diffs.TARJETA_CREDITO;
+
+                const updateDiffUI = (method, val) => {
+                    const el = document.getElementById(`diff-${method}`);
+                    const color = val > 0 ? 'red' : (val < 0 ? 'green' : 'black');
+                    const text = val > 0 ? `Faltan: ${Utils.formatCurrency(val)}` : (val < 0 ? `Sobran: ${Utils.formatCurrency(Math.abs(val))}` : 'Cuadra');
+                    el.innerHTML = `<span style="color:${color}; font-weight:bold;">${text}</span>`;
+                };
+
+                updateDiffUI('EFECTIVO', diffs.EFECTIVO);
+                updateDiffUI('TRANSFERENCIA', diffs.TRANSFERENCIA);
+                updateDiffUI('TARJETA_CREDITO', diffs.TARJETA_CREDITO);
+                updateDiffUI('TOTAL', totalDiff);
+
+                const resultBox = document.getElementById('closing-result-box');
+                resultBox.style.display = 'block';
+                const reportBox = document.getElementById('closing-discrepancy-report');
+                const reportText = document.getElementById('discrepancy-text');
+
+                if (totalDiff === 0) {
+                    resultBox.className = 'closing-status-box status-match';
+                    resultBox.innerHTML = `<i class="fas fa-check-circle"></i> ¡Caja Perfecta! Enviando reporte al Admin...`;
+                    reportBox.classList.add('hidden');
+                    
+                    const report = {
+                        date: new Date().toISOString(),
+                        closingDate: dateStr,
+                        warehouse: userWh,
+                        user: app.currentUser.user,
+                        status: 'OK',
+                        details: { expected, physical, diffs }
+                    };
+                    DB.saveClosingReport(report);
+                    DB.addNotification('ADMIN', `Cierre de Caja perfecto en ${userWh} (${dateStr})`);
+                    Utils.showToast('Reporte enviado al Administrador');
+
+                } else {
+                    resultBox.className = 'closing-status-box status-diff';
+                    resultBox.innerHTML = `<i class="fas fa-times-circle"></i> Incongruencia Detectada`;
+                    reportBox.classList.remove('hidden');
+
+                    let analysis = `Diferencia total: ${Utils.formatCurrency(Math.abs(totalDiff))}.<br>`;
+                    if (totalDiff > 0) {
+                        analysis += `Falta dinero en caja. Esto puede indicar:<br>`;
+                        analysis += `1. Error en conteo físico.<br>`;
+                        analysis += `2. Venta realizada pero NO registrada en el sistema (Robo o venta 'por fuera').<br>`;
+                        analysis += `3. Pérdida de efectivo.`;
+                    } else {
+                        analysis += `Sobra dinero en caja. Posible error en ingreso de datos o venta doblemente registrada.`;
+                    }
+                    reportText.innerHTML = analysis;
+
+                    const report = {
+                        date: new Date().toISOString(),
+                        closingDate: dateStr,
+                        warehouse: userWh,
+                        user: app.currentUser.user,
+                        status: 'DISCREPANCY',
+                        totalDifference: totalDiff,
+                        observations: observations,
+                        details: { expected, physical, diffs }
+                    };
+                    DB.saveClosingReport(report);
+                    DB.addNotification('ADMIN', `Incongruencia en Cierre de Caja ${userWh} (${dateStr}): ${Utils.formatCurrency(Math.abs(totalDiff))}`);
+                    Utils.showToast('Reporte de discrepancia generado y enviado.', 'error');
+                }
+            },
+
+            // --- RENDERIZADO DE REPORTES (ADMIN) ---
+            renderClosingReports: () => {
+                const reports = DB.getClosingReports();
+                const tbody = document.getElementById('closing-reports-body');
+                tbody.innerHTML = '';
+
+                if(reports.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#777;">No hay reportes recibidos aún.</td></tr>';
+                    return;
+                }
+
+                // Ordenar por fecha descendente
+                const sorted = [...reports].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+                sorted.forEach(r => {
+                    const tr = document.createElement('tr');
+                    const statusBadge = r.status === 'OK' 
+                        ? `<span class="badge OK">Perfecto</span>` 
+                        : `<span class="badge DISCREPANCY">Incongruencia</span>`;
+                    
+                    const diffText = r.totalDifference === 0 
+                        ? '-' 
+                        : `<span style="color:${r.totalDifference > 0 ? 'red' : 'green'}; font-weight:bold;">${Utils.formatCurrency(r.totalDifference)}</span>`;
+
+                    tr.innerHTML = `
+                        <td>${r.closingDate}</td>
+                        <td><strong>${r.warehouse}</strong></td>
+                        <td>${r.user}</td>
+                        <td>${statusBadge}</td>
+                        <td>${diffText}</td>
+                        <td>
+                            <button class="action-btn secondary" onclick="alert('Obs: ${r.observations || 'Sin observaciones'}')">Ver Obs</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            },
+
+            // --- RENDERIZADO DE REMISIONES ---
+            renderRemissions: () => {
+                const movements = DB.getMovements();
+                const userWh = app.currentUser.warehouse;
+                const role = app.currentUser.role;
+                
+                // Filtrar solo movimientos tipo REMISION
+                const remissions = movements.filter(m => m.type === 'REMISION');
+                
+                const tbody = document.getElementById('remissions-table-body');
+                tbody.innerHTML = '';
+
+                if(remissions.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#777;">No hay remisiones registradas.</td></tr>';
+                    return;
+                }
+
+                // Filtrar por permisos: Admin ve todo, Gerente ve las de su almacén (origen o destino)
+                const visibleRemissions = remissions.filter(r => {
+                    if (role === 'ADMIN') return true;
+                    if (r.fromWarehouse === userWh || r.toWarehouse === userWh) return true;
+                    return false;
+                });
+
+                visibleRemissions.forEach(r => {
+                    const tr = document.createElement('tr');
+                    const date = new Date(r.date).toLocaleDateString();
+                    tr.innerHTML = `
+                        <td><span class="badge REMISION">${r.remissionId}</span></td>
+                        <td>${date}</td>
+                        <td>${r.fromWarehouse}</td>
+                        <td>${r.toWarehouse}</td>
+                        <td>${r.items.length} Equipo(s)</td>
+                        <td>${r.userName || r.user}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            },
+
+            // --- CAPITAL LOGIC ---
+            renderSettings: () => {
+                const cap = DB.getCapital();
+                document.getElementById('settings-current-capital').textContent = Utils.formatCurrency(cap);
+            },
+
+            handleCapitalAdjustment: (e) => {
+                e.preventDefault();
+                const val = parseFloat(document.getElementById('new-capital-input').value);
+                if(isNaN(val) || val < 0) return;
+                
+                DB.updateCapital(val);
+                Utils.showToast('Capital actualizado correctamente');
+                app.closeModal('admin-capital');
+                app.renderSettings();
+                app.renderDashboard(); // Actualizar dashboard si esta abierto
+            },
+
+            // --- SECCION USUARIOS ---
+            renderUsers: () => {
+                const users = DB.getUsers();
+                const tbody = document.getElementById('users-table-body');
+                tbody.innerHTML = '';
+                
+                users.forEach(u => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${u.user}</strong></td>
+                        <td>${u.name}</td>
+                        <td><span class="badge" style="background:#eee; color:#333;">${u.role}</span></td>
+                        <td>${u.warehouse === 'ALL' ? '<span style="color:#d35400; font-weight:bold;">TODOS</span>' : u.warehouse}</td>
+                        <td>
+                            <button class="action-btn secondary" onclick="app.openUserModal('${u.user}')"><i class="fas fa-edit"></i></button>
+                            ${u.user !== 'Diego' && u.user !== 'Jonny' ? `<button class="action-btn danger" onclick="app.deleteUser('${u.user}')"><i class="fas fa-trash"></i></button>` : ''}
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            },
+
+            openUserModal: (editUser = null) => {
+                const form = document.getElementById('form-user');
+                form.reset();
+                
+                const whSelect = document.getElementById('user-warehouse');
+                const warning = document.getElementById('warehouse-change-warning');
+
+                if(editUser) {
+                    const u = DB.getUsers().find(x => x.user === editUser);
+                    document.getElementById('user-original').value = u.user;
+                    document.getElementById('user-login').value = u.user;
+                    document.getElementById('user-login').disabled = true; 
+                    document.getElementById('user-name').value = u.name;
+                    document.getElementById('user-pass').placeholder = "Dejar vacío para mantener";
+                    document.getElementById('user-role').value = u.role;
+                    whSelect.value = u.warehouse;
+                } else {
+                    document.getElementById('user-original').value = '';
+                    document.getElementById('user-login').disabled = false;
+                    document.getElementById('user-pass').required = true;
+                    whSelect.value = 'ALVAGARA'; 
+                }
+                warning.classList.add('hidden');
+                app.openModal('user-form');
+            },
+
+            handleSaveUser: (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const originalUser = formData.get('originalUser');
+                const user = formData.get('user');
+                const name = formData.get('name');
+                const pass = formData.get('pass');
+                const role = formData.get('role');
+                const warehouse = formData.get('warehouse');
+                
+                let users = DB.getUsers();
+                
+                if(originalUser) {
+                    const idx = users.findIndex(u => u.user === originalUser);
+                    if(idx !== -1) {
+                        const oldWh = users[idx].warehouse;
+                        const newWh = warehouse;
+                        
+                        users[idx].name = name;
+                        users[idx].role = role;
+                        users[idx].warehouse = warehouse;
+                        if(pass) users[idx].pass = pass;
+
+                        if(oldWh !== newWh && role !== 'ADMIN') {
+                            DB.addNotification(user, `Has sido trasladado al almacén: ${newWh}`);
+                        }
+                        
+                        Utils.showToast('Usuario actualizado');
+                    }
+                } else {
+                    if(users.find(u => u.user === user)) {
+                        Utils.showToast('El usuario ya existe', 'error');
+                        return;
+                    }
+                    users.push({ user, pass, role, name, warehouse });
+                    Utils.showToast('Usuario creado');
+                }
+                
+                DB.saveUsers(users);
+                app.closeModal('user-form');
+                app.renderUsers();
+            },
+
+            deleteUser: (username) => {
+                if(!confirm('¿Estás seguro de eliminar este usuario?')) return;
+                let users = DB.getUsers();
+                users = users.filter(u => u.user !== username);
+                DB.saveUsers(users);
+                app.renderUsers();
+                Utils.showToast('Usuario eliminado');
             },
 
             renderDashboard: () => {
                 const inv = DB.getInventory();
                 const movements = DB.getMovements();
+                const userWh = app.currentUser.warehouse;
+                const myInv = userWh === 'ALL' ? inv : inv.filter(i => i.warehouse === userWh);
+                
                 let totalRevenue = 0, totalProfit = 0;
                 const today = new Date().toISOString().split('T')[0];
                 let profitToday = 0;
+                const paymentStats = { EFECTIVO: 0, TRANSFERENCIA: 0, TARJETA_CREDITO: 0 };
 
                 movements.forEach(m => {
-                    if (m.newStatus === 'VENDIDO') {
+                    if (m.newStatus === 'VENDIDO' && (userWh === 'ALL' || m.warehouse === userWh)) {
                         totalRevenue += m.salePrice;
                         totalProfit += m.profit;
                         if (m.date.startsWith(today)) profitToday += m.profit;
+                        
+                        if(m.paymentMethod) {
+                            if(paymentStats[m.paymentMethod] !== undefined) paymentStats[m.paymentMethod] += m.salePrice;
+                        }
                     }
                 });
 
-                const totalCost = inv.reduce((sum, i) => sum + (i.cost || 0), 0);
-                const totalStock = inv.filter(i => i.status === 'EN_INVENTORY').length;
+                const totalCost = myInv.reduce((sum, i) => sum + (i.cost || 0), 0);
+                const totalStock = myInv.filter(i => i.status === 'EN_INVENTORY').length;
+                
+                const totalPending = userWh === 'ALL' 
+                    ? inv.filter(i => i.request?.status === 'REQUESTED').length 
+                    : inv.filter(i => i.warehouse === userWh && i.request?.status === 'REQUESTED').length;
 
                 document.getElementById('kpi-revenue').textContent = Utils.formatCurrency(totalRevenue);
                 document.getElementById('kpi-profit').textContent = Utils.formatCurrency(totalProfit);
                 document.getElementById('kpi-stock').textContent = totalStock;
+                document.getElementById('kpi-requests').textContent = totalPending;
 
-                const brandCounts = {};
-                movements.forEach(s => { if(s.newStatus === 'VENDIDO') brandCounts[s.brand] = (brandCounts[s.brand] || 0) + 1; });
+                // Mostrar Capital solo a Admins
+                const capCard = document.getElementById('card-capital');
+                if(app.currentUser.role === 'ADMIN') {
+                    capCard.classList.remove('hidden');
+                    document.getElementById('kpi-capital').textContent = Utils.formatCurrency(DB.getCapital());
+                } else {
+                    capCard.classList.add('hidden');
+                }
 
-                const ctx1 = document.getElementById('chart-brands').getContext('2d');
-                if(app.charts.brands) app.charts.brands.destroy();
-                app.charts.brands = new Chart(ctx1, {
+                const ctxP = document.getElementById('chart-payment').getContext('2d');
+                if(app.charts.payment) app.charts.payment.destroy();
+                app.charts.payment = new Chart(ctxP, {
                     type: 'doughnut',
-                    data: { labels: Object.keys(brandCounts), datasets: [{ data: Object.values(brandCounts), backgroundColor: ['#53515a', '#7f7b83', '#dfe1e7', '#333'] }] },
+                    data: {
+                        labels: ['Efectivo', 'Transferencia', 'Tarjeta'],
+                        datasets: [{ data: [paymentStats.EFECTIVO, paymentStats.TRANSFERENCIA, paymentStats.TARJETA_CREDITO], backgroundColor: ['#2ecc71', '#3498db', '#9b59b6'] }]
+                    },
                     options: { responsive: true, maintainAspectRatio: false }
                 });
 
-                const ctx2 = document.getElementById('chart-trend').getContext('2d');
-                if(app.charts.trend) app.charts.trend.destroy();
-                app.charts.trend = new Chart(ctx2, {
+                const brandCounts = {};
+                movements.forEach(s => { 
+                    if(s.newStatus === 'VENDIDO' && (userWh === 'ALL' || s.warehouse === userWh)) {
+                        brandCounts[s.brand] = (brandCounts[s.brand] || 0) + 1; 
+                    }
+                });
+
+                const ctxB = document.getElementById('chart-brands').getContext('2d');
+                if(app.charts.brands) app.charts.brands.destroy();
+                app.charts.brands = new Chart(ctxB, {
                     type: 'bar',
-                    data: { labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'], datasets: [{ label: 'Ventas ($)', data: [0,0,0,0,0,0,0], backgroundColor: '#53515a' }] },
+                    data: { labels: Object.keys(brandCounts), datasets: [{ label: 'Ventas', data: Object.values(brandCounts), backgroundColor: '#53515a' }] },
                     options: { responsive: true, maintainAspectRatio: false }
                 });
             },
 
-            // --- POS LOGIC ---
+            renderRequests: () => {
+                const inv = DB.getInventory();
+                const tbody = document.getElementById('requests-table-body');
+                tbody.innerHTML = '';
+                
+                const userWh = app.currentUser.warehouse;
+                const role = app.currentUser.role;
+                
+                const myRequestedItems = inv.filter(item => {
+                    if(item.request?.status !== 'REQUESTED') return false;
+                    if(role === 'ADMIN') return true; 
+                    return item.warehouse === userWh;
+                });
+
+                if(myRequestedItems.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#777;">No hay solicitudes pendientes.</td></tr>';
+                    return;
+                }
+
+                myRequestedItems.forEach(item => {
+                    const tr = document.createElement('tr');
+                    const reqDate = new Date(item.request.date).toLocaleString();
+                    
+                    tr.innerHTML = `
+                        <td data-label="Fecha">${reqDate}</td>
+                        <td data-label="Solicitante">${item.request.requesterName}</td>
+                        <td data-label="Almacén Sol">${item.request.requesterWarehouse || item.request.requesterUser}</td>
+                        <td data-label="Equipo">${item.brand} ${item.model}</td>
+                        <td data-label="Serial">${item.serial}</td>
+                        <td data-label="Estado"><span class="badge REQUESTED">Pendiente</span></td>
+                        <td data-label="Acciones">
+                            <button class="action-btn success" onclick="app.resolveRequest('${item.serial}', true)" title="Aprobar"><i class="fas fa-check"></i></button>
+                            <button class="action-btn danger" onclick="app.resolveRequest('${item.serial}', false)" title="Rechazar"><i class="fas fa-times"></i></button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            },
+
+            resolveRequest: (serial, approved) => {
+                const inv = DB.getInventory();
+                const idx = inv.findIndex(i => i.serial === serial);
+                if(idx === -1) return;
+
+                if(approved) {
+                    // 1. Generar Remisión
+                    const remissionId = Utils.generateRemissionId();
+                    const item = inv[idx];
+                    const movements = DB.getMovements();
+
+                    movements.push({
+                        id: Date.now(),
+                        date: new Date().toISOString(),
+                        type: 'REMISION',
+                        remissionId: remissionId,
+                        user: app.currentUser.user,
+                        userName: app.currentUser.name,
+                        fromWarehouse: item.warehouse,
+                        toWarehouse: item.request.requesterWarehouse,
+                        items: [ { serial: item.serial, brand: item.brand, model: item.model, cost: item.cost } ],
+                        notes: `Préstamo aprobado solicitado por ${item.request.requesterName}`
+                    });
+                    DB.saveMovements(movements);
+
+                    // 2. Actualizar estado
+                    inv[idx].request.status = 'APPROVED';
+                    
+                    Utils.showToast(`Solicitud Aprobada. Remisión ${remissionId} generada.`);
+                } else {
+                    inv[idx].request.status = 'REJECTED';
+                    Utils.showToast('Solicitud Rechazada.', 'error');
+                }
+                DB.saveInventory(inv);
+                app.renderInventory();
+                app.renderRequests();
+            },
+
             renderPOS: () => {
-                const inv = DB.getInventory().filter(i => i.status === 'EN_INVENTORY');
+                const inv = DB.getInventory();
+                const userWh = app.currentUser.warehouse;
                 const grid = document.getElementById('pos-grid');
                 grid.innerHTML = '';
-                inv.forEach(item => {
+
+                const available = inv.filter(item => {
+                    if(item.status !== 'EN_INVENTORY') return false;
+                    if(userWh === 'ALL') return true;
+                    if(item.warehouse === userWh) return true;
+                    if(item.request?.status === 'APPROVED' && item.request?.requesterUser === app.currentUser.user) return true;
+                    return false;
+                });
+
+                if(available.length === 0) {
+                    grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#777;">No hay productos disponibles en tu almacén.</p>';
+                }
+
+                available.forEach(item => {
+                    const isMyWarehouse = item.warehouse === userWh;
                     const card = document.createElement('div');
                     card.className = 'product-card';
+                    const badge = isMyWarehouse 
+                        ? `<span class="product-wh-warehouse" style="background:#e3f2fd; color:#1976d2;">${item.warehouse}</span>`
+                        : `<span class="product-wh-warehouse" style="background:#e8f5e9; color:#2e7d32;">${item.warehouse} (Aprobado)</span>`;
+
                     card.innerHTML = `
                         <i class="fas fa-mobile-alt" style="font-size: 2rem; color: #53515a; margin-bottom: 10px;"></i>
                         <h4>${item.brand} ${item.model}</h4>
                         <small style="color:#888">${item.serial}</small>
-                        <div class="product-price">${Utils.formatCurrency(item.cost)}</div>
+                        <div class="product-price">${Utils.formatCurrency(item.cost * 1.3)}</div>
+                        ${badge}
                     `;
                     card.onclick = () => app.openPosPriceModal(item);
                     grid.appendChild(card);
@@ -1005,7 +1915,10 @@
                     const div = document.createElement('div');
                     div.className = 'cart-item';
                     div.innerHTML = `
-                        <div class="cart-item-info"><h4>${c.brand} ${c.model}</h4><p>${c.serial}</p></div>
+                        <div class="cart-item-info">
+                            <h4>${c.brand} ${c.model}</h4>
+                            <p style="font-size:0.75rem; color:#666;">${c.serial} | ${c.warehouse}</p>
+                        </div>
                         <div class="flex items-center" style="gap:10px;"><span style="font-weight:700;">${Utils.formatCurrency(c.salePrice)}</span><button class="btn-remove" onclick="app.removeFromCart(${idx})"><i class="fas fa-trash"></i></button></div>
                     `;
                     list.appendChild(div);
@@ -1029,9 +1942,19 @@
                 const total = app.cart.reduce((sum, i) => sum + i.salePrice, 0);
                 document.getElementById('pos-checkout-total').textContent = Utils.formatCurrency(total);
                 document.getElementById('form-pos-checkout').reset();
+                document.getElementById('pos-payment-method').value = 'EFECTIVO';
+                app.toggleInstallments();
                 app.openModal('pos-checkout');
             },
 
+            toggleInstallments: () => {
+                const method = document.getElementById('pos-payment-method').value;
+                const group = document.getElementById('pos-installments-group');
+                if(method === 'TARJETA_CREDITO') group.classList.remove('hidden');
+                else group.classList.add('hidden');
+            },
+
+            // --- LOGICA DE VENTAS (AFECTA CAPITAL) ---
             finalizePosSale: (e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
@@ -1042,6 +1965,9 @@
                     invoice: formData.get('requestInvoice') === 'on'
                 };
 
+                const paymentMethod = formData.get('paymentMethod');
+                const installments = formData.get('installments') || 1;
+
                 const inv = DB.getInventory();
                 const movements = DB.getMovements();
                 let totalSale = 0, totalCost = 0;
@@ -1050,16 +1976,30 @@
 
                 app.cart.forEach(cItem => {
                     const idx = inv.findIndex(i => i.serial === cItem.serial);
-                    if(idx !== -1) inv[idx].status = 'VENDIDO';
-                    totalSale += cItem.salePrice;
-                    totalCost += cItem.cost;
-                    itemsSold.push({ serial: cItem.serial, brand: cItem.brand, model: cItem.model, cost: cItem.cost, salePrice: cItem.salePrice });
+                    if(idx !== -1) {
+                        const originalWarehouse = inv[idx].warehouse;
+                        inv[idx].status = 'VENDIDO';
+                        if(inv[idx].request) delete inv[idx].request;
+
+                        totalSale += cItem.salePrice;
+                        totalCost += cItem.cost;
+                        itemsSold.push({ 
+                            serial: cItem.serial, brand: cItem.brand, model: cItem.model, 
+                            cost: cItem.cost, salePrice: cItem.salePrice,
+                            originalWarehouse: originalWarehouse 
+                        });
+                    }
                 });
 
+                const transactionWarehouse = app.currentUser.warehouse === 'ALL' ? (itemsSold[0]?.originalWarehouse || 'ALVAGARA') : app.currentUser.warehouse;
+
+                // MOVIMIENTO DE VENTA
                 movements.push({
                     id: mainMovementId,
                     date: new Date().toISOString(),
                     user: app.currentUser.user,
+                    userName: app.currentUser.name,
+                    warehouse: transactionWarehouse,
                     items: itemsSold,
                     oldStatus: 'EN_INVENTORY',
                     newStatus: 'VENDIDO',
@@ -1069,11 +2009,18 @@
                     cost: totalCost,
                     salePrice: totalSale,
                     profit: totalSale - totalCost,
-                    invoiceRequested: buyerData.invoice
+                    invoiceRequested: buyerData.invoice,
+                    paymentMethod: paymentMethod,
+                    installments: installments
                 });
 
                 DB.saveInventory(inv);
                 DB.saveMovements(movements);
+
+                // ACTUALIZAR CAPITAL (AUMENTA POR VENTA)
+                const currentCapital = DB.getCapital();
+                DB.updateCapital(currentCapital + totalSale);
+                Utils.showToast(`Capital actualizado: +${Utils.formatCurrency(totalSale)}`);
 
                 if(buyerData.invoice) {
                     app.generateInvoice(movements[movements.length-1]);
@@ -1091,7 +2038,7 @@
                 cards.forEach(c => c.style.display = c.innerText.toLowerCase().includes(txt.toLowerCase()) ? 'block' : 'none');
             },
 
-            // --- INVENTORY LOGIC ---
+            // --- INVENTORY LOGIC (VERIFICA CAPITAL) ---
             renderInventory: () => {
                 const list = DB.getInventory();
                 const tbody = document.getElementById('inventory-table-body');
@@ -1099,33 +2046,65 @@
 
                 const search = document.getElementById('search-inventory').value.toLowerCase();
                 const statusFilter = document.getElementById('filter-status').value;
+                const userWh = app.currentUser.warehouse;
+                const role = app.currentUser.role;
 
                 const filtered = list.filter(item => {
                     const matchSearch = item.serial.toLowerCase().includes(search) || item.brand.toLowerCase().includes(search) || item.model.toLowerCase().includes(search);
                     const matchStatus = statusFilter ? item.status === statusFilter : true;
-                    return matchSearch && matchStatus;
+                    
+                    if(role === 'ADMIN') return matchSearch && matchStatus;
+                    if(role === 'GERENTE') return item.warehouse === userWh && matchSearch && matchStatus;
+                    if(role === 'VENDEDOR') return matchSearch && matchStatus; 
+                    
+                    return false;
                 });
 
                 filtered.forEach(item => {
                     const tr = document.createElement('tr');
+                    const isMyWarehouse = item.warehouse === userWh;
                     
-                    let extraInfo = '-';
-                    const movements = DB.getMovements().filter(m => m.serial === item.serial && (m.newStatus === 'PRESTADO' || m.newStatus === 'VENDIDO')).sort((a,b)=>new Date(b.date)-new Date(a.date));
-                    if(movements.length > 0) {
-                        const lastM = movements[0];
-                        if(lastM.newStatus === 'PRESTADO') extraInfo = `Prestado a: ${lastM.loanTo}`;
-                        if(lastM.newStatus === 'VENDIDO') extraInfo = `Cliente: ${lastM.buyerName}`;
+                    let reqBadge = '';
+                    if(item.request?.status === 'REQUESTED') reqBadge = `<span class="badge REQUESTED">Solicitado por ${item.request.requesterName}</span>`;
+                    if(item.request?.status === 'APPROVED') reqBadge = `<span class="badge APPROVED">Aprobado para ${item.request.requesterName}</span>`;
+                    if(item.request?.status === 'REJECTED') reqBadge = `<span class="badge REJECTED">Rechazado</span>`;
+
+                    let actions = '';
+                    
+                    if (role === 'ADMIN' || (role === 'GERENTE' && isMyWarehouse)) {
+                        actions += `<button class="action-btn secondary" onclick="app.openStatusModal('${item.serial}')"><i class="fas fa-exchange-alt"></i></button>`;
+                    } 
+                    else if (role === 'VENDEDOR') {
+                        if(isMyWarehouse) {
+                        } else {
+                            if(item.status === 'EN_INVENTORY') {
+                                if(!item.request || item.request.status === 'REJECTED') {
+                                    actions += `<button class="action-btn" onclick="app.requestItem('${item.serial}')" title="Solicitar a otro almacén"><i class="fas fa-hand-holding"></i> Solicitar</button>`;
+                                } else if (item.request?.status === 'REQUESTED') {
+                                    actions += `<span style="font-size:0.8rem; color:#f39c12;">En espera</span>`;
+                                } else if (item.request?.status === 'APPROVED') {
+                                    if(item.request.requesterUser === app.currentUser.user) {
+                                        actions += `<span style="font-size:0.8rem; color:green;">Disponible</span>`;
+                                    } else {
+                                        actions += `<span style="font-size:0.8rem; color:#777;">Otro</span>`;
+                                    }
+                                }
+                            }
+                        }
                     }
 
-                    let actions = `<button class="action-btn secondary" onclick="app.openStatusModal('${item.serial}')"><i class="fas fa-exchange-alt"></i></button>`;
-                    
+                    if(isMyWarehouse && item.request?.status === 'REQUESTED') {
+                        actions += ` <button class="action-btn success" onclick="app.resolveRequest('${item.serial}', true)" title="Aprobar"><i class="fas fa-check"></i></button>`;
+                        actions += ` <button class="action-btn danger" onclick="app.resolveRequest('${item.serial}', false)" title="Rechazar"><i class="fas fa-times"></i></button>`;
+                    }
+
                     tr.innerHTML = `
                         <td data-label="Serial"><strong>${item.serial}</strong></td>
                         <td data-label="Marca/Modelo">${item.brand} ${item.model}</td>
-                        <td data-label="Tipo">${item.type}</td>
+                        <td data-label="Almacén">${item.warehouse} ${!isMyWarehouse ? '<i class="fas fa-external-link-alt" style="font-size:0.8rem"></i>' : ''}</td>
                         <td data-label="Costo">${Utils.formatCurrency(item.cost)}</td>
                         <td data-label="Estado"><span class="badge ${item.status}">${item.status.replace('_', ' ')}</span></td>
-                        <td data-label="Info Extra" style="font-size:0.8rem; color:#777;">${extraInfo}</td>
+                        <td data-label="Solicitud">${reqBadge}</td>
                         <td data-label="Acciones">${actions}</td>
                     `;
                     tbody.appendChild(tr);
@@ -1134,20 +2113,78 @@
 
             filterInventory: () => app.renderInventory(),
 
+            openModal: (id) => {
+                document.getElementById(`modal-${id}`).classList.remove('hidden');
+                if(id === 'add-item') {
+                    const whSelect = document.getElementById('add-warehouse-select');
+                    const lockMsg = document.getElementById('wh-locked-msg');
+                    
+                    if(app.currentUser.role !== 'ADMIN') {
+                        whSelect.value = app.currentUser.warehouse;
+                        whSelect.disabled = true;
+                        lockMsg.classList.remove('hidden');
+                    } else {
+                        whSelect.disabled = false;
+                        lockMsg.classList.add('hidden');
+                    }
+                }
+            },
+
+            // --- AGREGAR ITEM (VERIFICA CAPITAL) ---
             handleAddItem: (e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
+                let targetWarehouse = formData.get('warehouse');
+                if (app.currentUser.role !== 'ADMIN') targetWarehouse = app.currentUser.warehouse;
+                if (!targetWarehouse) targetWarehouse = 'ALVAGARA';
+
+                const newItemCost = parseFloat(formData.get('cost'));
+
+                // VERIFICAR CAPITAL
+                const currentCapital = DB.getCapital();
+                if (currentCapital < newItemCost) {
+                    Utils.showToast(`Saldo Insuficiente. Capital: ${Utils.formatCurrency(currentCapital)}, Costo: ${Utils.formatCurrency(newItemCost)}`, 'error');
+                    return;
+                }
+
                 const newItem = {
-                    serial: formData.get('serial').toUpperCase(), brand: formData.get('brand'), model: formData.get('model'),
-                    type: formData.get('type'), cost: parseFloat(formData.get('cost')), status: 'EN_INVENTORY', date: new Date().toISOString()
+                    serial: formData.get('serial').toUpperCase(), 
+                    brand: formData.get('brand'), 
+                    model: formData.get('model'),
+                    type: formData.get('type'), 
+                    cost: newItemCost, 
+                    warehouse: targetWarehouse, 
+                    status: 'EN_INVENTORY', 
+                    date: new Date().toISOString()
                 };
                 const list = DB.getInventory();
                 if (list.find(i => i.serial === newItem.serial)) { Utils.showToast('El serial ya existe', 'error'); return; }
                 list.push(newItem);
                 DB.saveInventory(list);
-                Utils.showToast('Equipo registrado');
+
+                // DESCUENTAR DEL CAPITAL
+                DB.updateCapital(currentCapital - newItemCost);
+
+                Utils.showToast(`Equipo registrado. Capital descontado: -${Utils.formatCurrency(newItemCost)}`);
                 app.closeModal('add-item');
                 e.target.reset();
+                app.renderInventory();
+            },
+
+            requestItem: (serial) => {
+                const inv = DB.getInventory();
+                const idx = inv.findIndex(i => i.serial === serial);
+                if(idx === -1) return;
+
+                inv[idx].request = {
+                    status: 'REQUESTED',
+                    requesterUser: app.currentUser.user,
+                    requesterName: app.currentUser.name,
+                    requesterWarehouse: app.currentUser.warehouse,
+                    date: new Date().toISOString()
+                };
+                DB.saveInventory(inv);
+                Utils.showToast('Solicitud enviada al almacén dueño');
                 app.renderInventory();
             },
 
@@ -1156,17 +2193,25 @@
                 const item = list.find(i => i.serial === serial);
                 if (!item) return;
 
-                const select = document.getElementById('status-select');
-                const lostOption = select.querySelector('option[value="PERDIDO"]');
-                if (app.currentUser.role === 'EMPLEADO') { lostOption.disabled = true; }
-                else { lostOption.disabled = false; }
+                const loanWhSelect = document.getElementById('loan-warehouse-select');
+                loanWhSelect.innerHTML = '';
+                WAREHOUSES.forEach(wh => {
+                    if(wh !== item.warehouse) {
+                        const opt = document.createElement('option');
+                        opt.value = wh;
+                        opt.textContent = wh;
+                        loanWhSelect.appendChild(opt);
+                    }
+                });
 
                 document.getElementById('status-serial').value = item.serial;
                 document.getElementById('status-cost').value = item.cost;
-                document.getElementById('modal-item-info').textContent = `Equipo: ${item.brand} ${item.model} (${item.serial})`;
+                document.getElementById('new-cost-input').value = ''; 
+                document.getElementById('modal-item-info').textContent = `Equipo: ${item.brand} ${item.model} (${item.serial}) - [${item.warehouse}]`;
                 
                 document.getElementById('status-select').value = item.status;
                 app.toggleStatusFields();
+                
                 document.querySelectorAll('#form-update-status input[type="text"]').forEach(i => i.value = '');
                 document.querySelector('#chk-invoice-inv').checked = false;
 
@@ -1181,6 +2226,17 @@
                 if (status === 'PRESTADO') document.getElementById('fields-loan').classList.remove('hidden');
             },
 
+            toggleLoanDest: () => {
+                const type = document.getElementById('loan-dest-type').value;
+                if(type === 'PERSONA') {
+                    document.getElementById('field-loan-person').classList.remove('hidden');
+                    document.getElementById('field-loan-warehouse').classList.add('hidden');
+                } else {
+                    document.getElementById('field-loan-person').classList.add('hidden');
+                    document.getElementById('field-loan-warehouse').classList.remove('hidden');
+                }
+            },
+
             handleUpdateStatus: (e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
@@ -1188,10 +2244,26 @@
                 const newStatus = formData.get('newStatus');
                 const salePriceStr = formData.get('salePrice');
                 const cost = parseFloat(formData.get('current-cost'));
+                const newCostStr = formData.get('newCost');
+                
                 const list = DB.getInventory();
                 const idx = list.findIndex(i => i.serial === serial);
                 const oldStatus = list[idx].status;
                 
+                let finalCost = cost;
+                if(newCostStr && parseFloat(newCostStr) > 0) {
+                    finalCost = parseFloat(newCostStr);
+                    const movements = DB.getMovements();
+                    movements.push({
+                        date: new Date().toISOString(), serial: serial, brand: list[idx].brand, model: list[idx].model,
+                        oldStatus: oldStatus, newStatus: 'COST_ADJUSTMENT', 
+                        user: app.currentUser.user, warehouse: list[idx].warehouse,
+                        cost: cost, salePrice: 0, profit: 0, notes: `Ajuste de costo: ${Utils.formatCurrency(cost)} -> ${Utils.formatCurrency(finalCost)}`
+                    });
+                    DB.saveMovements(movements);
+                    list[idx].cost = finalCost; 
+                }
+
                 let salePrice = 0;
                 if (newStatus === 'VENDIDO') {
                     if (!salePriceStr || parseFloat(salePriceStr) <= 0) { Utils.showToast('Precio de venta inválido', 'error'); return; }
@@ -1203,9 +2275,19 @@
 
                 const movements = DB.getMovements();
                 const movement = {
-                    date: new Date().toISOString(), serial: serial, brand: list[idx].brand, model: list[idx].model,
-                    oldStatus: oldStatus, newStatus: newStatus, user: app.currentUser.user,
-                    cost: cost, salePrice: salePrice, profit: salePrice - cost
+                    date: new Date().toISOString(), 
+                    serial: serial, 
+                    brand: list[idx].brand, 
+                    model: list[idx].model,
+                    oldStatus: oldStatus, 
+                    newStatus: newStatus, 
+                    user: app.currentUser.user,
+                    userName: app.currentUser.name,
+                    warehouse: list[idx].warehouse,
+                    cost: finalCost, 
+                    salePrice: salePrice, 
+                    profit: salePrice - finalCost,
+                    remissionId: null
                 };
 
                 if(newStatus === 'VENDIDO') {
@@ -1214,10 +2296,23 @@
                     movement.buyerEmail = formData.get('buyerEmail');
                     movement.invoiceRequested = formData.get('requestInvoice') === 'on';
                 }
-                if(newStatus === 'PRESTADO') { movement.loanTo = formData.get('loanTo'); }
+                if(newStatus === 'PRESTADO') { 
+                    const destType = formData.get('loanDestinationType');
+                    if(destType === 'ALMACEN') {
+                        const targetWh = formData.get('loanWarehouse');
+                        movement.loanTo = targetWh; 
+                        movement.type = 'REMISION';
+                        movement.remissionId = Utils.generateRemissionId();
+                        Utils.showToast(`Remisión ${movement.remissionId} generada para ${targetWh}`);
+                    } else {
+                        movement.loanTo = formData.get('loanTo'); 
+                    }
+                }
 
-                movements.push(movement);
-                DB.saveMovements(movements);
+                if(newStatus !== 'COST_ADJUSTMENT') {
+                    movements.push(movement);
+                    DB.saveMovements(movements);
+                }
 
                 if(newStatus === 'VENDIDO' && movement.invoiceRequested) { app.generateInvoice(movement); }
 
@@ -1226,14 +2321,13 @@
                 app.renderInventory();
             },
 
-            // --- SALES LOGIC (SIMPLIFICADA SEGÚN SOLICITUD) ---
+            // --- SALES & REPORTES ---
             renderSales: () => {
-                const inventory = DB.getInventory();
                 const movements = DB.getMovements();
-                let totalCost = inventory.reduce((sum, i) => sum + (i.cost || 0), 0);
-                
                 let totalRevenue = 0, totalProfit = 0, profitToday = 0;
                 const today = new Date().toISOString().split('T')[0];
+                const userWh = app.currentUser.warehouse;
+                const role = app.currentUser.role;
 
                 const tbody = document.getElementById('sales-table-body');
                 tbody.innerHTML = '';
@@ -1241,16 +2335,16 @@
                 const sortedMovements = [...movements].sort((a,b) => new Date(b.date) - new Date(a.date));
 
                 sortedMovements.forEach(m => {
+                    if(userWh !== 'ALL' && m.warehouse !== userWh) return;
+
                     let isSale = false;
                     let revenue = 0;
                     let profit = 0;
-                    let itemsCount = 0;
 
                     if (m.newStatus === 'VENDIDO') {
                         isSale = true;
                         revenue = m.salePrice;
                         profit = m.profit;
-                        itemsCount = m.items ? m.items.length : 1;
                     }
 
                     if (isSale) {
@@ -1260,11 +2354,14 @@
 
                         const tr = document.createElement('tr');
                         const clientName = m.buyerName || 'Cliente General';
+                        const pmLabel = m.paymentMethod ? m.paymentMethod.replace('_', ' ') : '-';
                         
                         tr.innerHTML = `
                             <td>${new Date(m.date).toLocaleString()}</td>
-                            <td>${m.user}</td>
+                            <td>${m.userName || m.user}</td>
+                            <td>${m.warehouse}</td>
                             <td>${clientName}</td>
+                            <td><span class="badge" style="background:#eee; color:#333;">${pmLabel}</span></td>
                             <td style="color: green; font-weight: bold;">${Utils.formatCurrency(revenue)}</td>
                             <td>
                                 <div class="flex" style="gap:5px;">
@@ -1277,29 +2374,27 @@
                     }
                 });
 
-                document.getElementById('kpi-total-cost').textContent = Utils.formatCurrency(totalCost);
                 document.getElementById('kpi-total-revenue').textContent = Utils.formatCurrency(totalRevenue);
                 document.getElementById('kpi-profit-report').textContent = Utils.formatCurrency(totalProfit);
                 document.getElementById('kpi-profit-today').textContent = Utils.formatCurrency(profitToday);
             },
 
-            // --- FACTURA & MODAL DETALLES ---
             findMovement: (id) => DB.getMovements().find(m => m.id === id),
 
             openSaleDetails: (id) => {
                 const movement = DB.getMovements().find(m => m.id === id);
                 if (!movement) return;
-
-                app.currentMovementForDetails = movement; // Guardar referencia
+                app.currentMovementForDetails = movement;
 
                 const isPos = movement.items && movement.items.length > 0;
                 const items = isPos ? movement.items : [movement];
                 const clientName = movement.buyerName || 'Cliente de mostrador';
                 const itemsCount = items.length > 1 ? `(${items.length} Artículos)` : '';
                 
-                const content = document.getElementById('sale-details-content');
-                
-                // Construir tabla de items
+                let title = 'Detalle de Venta';
+                if(movement.remissionId) title = `Remisión: ${movement.remissionId}`;
+                document.getElementById('detail-modal-title').textContent = title;
+
                 let itemsHtml = '';
                 items.forEach(item => {
                     itemsHtml += `
@@ -1307,11 +2402,21 @@
                             <td>${item.brand} ${item.model}</td>
                             <td>${item.serial}</td>
                             <td style="color:#777;">${Utils.formatCurrency(item.cost)}</td>
-                            <td style="font-weight:bold;">${Utils.formatCurrency(item.salePrice)}</td>
+                            <td style="font-weight:bold;">${Utils.formatCurrency(item.salePrice || 0)}</td>
                         </tr>
                     `;
                 });
+                
+                let extraInfo = '';
+                if(movement.newStatus === 'PRESTADO') {
+                    extraInfo = `<div style="margin-bottom:10px; padding:10px; background:#fff3e0; border-radius:8px; color:#e67e22;">
+                                    <strong><i class="fas fa-exchange-alt"></i> Préstamo/Traslado</strong><br>
+                                    Destino: ${movement.loanTo}
+                                    ${movement.remissionId ? `<br>Remisión ID: <strong>${movement.remissionId}</strong>` : ''}
+                                  </div>`;
+                }
 
+                const content = document.getElementById('sale-details-content');
                 content.innerHTML = `
                     <div class="detail-grid">
                         <div class="detail-card">
@@ -1321,13 +2426,16 @@
                             <div class="detail-value">${new Date(movement.date).toLocaleString()}</div>
                         </div>
                         <div class="detail-card">
-                            <div class="detail-label">Vendedor</div>
-                            <div class="detail-value">${movement.user}</div>
-                            <div class="detail-label">Cliente</div>
-                            <div class="detail-value">${clientName}</div>
+                            <div class="detail-label">Ejecutado por</div>
+                            <div class="detail-value">${movement.userName || movement.user}</div>
+                            <div class="detail-label">Almacén</div>
+                            <div class="detail-value">${movement.warehouse}</div>
                         </div>
                     </div>
 
+                    ${extraInfo}
+
+                    ${movement.newStatus === 'VENDIDO' ? `
                     <h4 style="margin: 15px 0 10px 0; color: #555;">Artículos Vendidos ${itemsCount}</h4>
                     <table class="sale-items-table">
                         <thead>
@@ -1338,9 +2446,7 @@
                                 <th>Precio Venta</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            ${itemsHtml}
-                        </tbody>
+                        <tbody>${itemsHtml}</tbody>
                     </table>
 
                     <div class="total-row">
@@ -1349,17 +2455,23 @@
                             <div class="detail-value" style="color: #2ecc71;">${Utils.formatCurrency(movement.profit)}</div>
                         </div>
                         <div style="text-align: right;">
+                            <div class="detail-label">Método Pago</div>
+                            <div style="font-weight:bold; margin-bottom:5px;">${movement.paymentMethod ? movement.paymentMethod.replace('_', ' ') : '-'}</div>
                             <div class="detail-label">Total Venta</div>
                             <div class="total-big">${Utils.formatCurrency(movement.salePrice)}</div>
                         </div>
                     </div>
+                    ` : `
+                    <div style="text-align:center; padding:20px; color:#777;">
+                        Movimiento interno de inventario (No afecta caja directamente).
+                    </div>
+                    `}
                 `;
 
-                // Manejo del botón factura
                 const invoiceBtn = document.getElementById('btn-invoice-from-details');
-                if(movement.invoiceRequested) {
+                if(movement.invoiceRequested && movement.newStatus === 'VENDIDO') {
                     invoiceBtn.classList.remove('hidden');
-                    invoiceBtn.innerHTML = `<i class="fas fa-print"></i> Reenviar Factura`;
+                    invoiceBtn.innerHTML = `<i class="fas fa-print"></i> Factura`;
                 } else {
                     invoiceBtn.classList.add('hidden');
                 }
@@ -1381,6 +2493,7 @@
                 document.getElementById('inv-client-name').textContent = movement.buyerName;
                 document.getElementById('inv-client-email').textContent = movement.buyerEmail;
                 document.getElementById('inv-client-phone').textContent = movement.buyerPhone;
+                document.getElementById('inv-wh').textContent = `Almacén: ${movement.warehouse}`;
 
                 const tbody = document.getElementById('inv-items');
                 tbody.innerHTML = '';
@@ -1405,12 +2518,11 @@
 
                 if(movement.buyerEmail) {
                     const subject = encodeURIComponent(`Factura Electrónica ALVAGARA - #${movement.id}`);
-                    const body = encodeURIComponent(`Estimado/a ${movement.buyerName},\n\nGracias por su compra en ALVAGARA.\n\nValor Total: ${Utils.formatCurrency(total)}\nSe adjunta factura en formato PDF.\n\nSaludos cordiales.`);
+                    const body = encodeURIComponent(`Estimado/a ${movement.buyerName},\n\nGracias por su compra en ALVAGARA.\n\nValor Total: ${Utils.formatCurrency(total)}\nMétodo de Pago: ${movement.paymentMethod}\nSe adjunta factura en formato PDF.\n\nSaludos cordiales.`);
                     window.location.href = `mailto:${movement.buyerEmail}?subject=${subject}&body=${body}`;
                 }
             },
 
-            // --- HELPERS ---
             startAutoBackup: async () => {
                 try {
                     app.fileHandle = await window.showSaveFilePicker({
@@ -1431,7 +2543,7 @@
                 const ws2 = XLSX.utils.json_to_sheet(movements);
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws1, "Inventario");
-                XLSX.utils.book_append_sheet(wb, ws2, "Ventas_Historial");
+                XLSX.utils.book_append_sheet(wb, ws2, "Movimientos");
                 const filename = `ALVAGARA_Backup_${new Date().toISOString().split('T')[0]}.xlsx`;
                 if (isAuto && app.fileHandle) {
                     try { const writable = await app.fileHandle.createWritable(); await writable.write(XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' })); await writable.close(); }
@@ -1451,7 +2563,16 @@
                     const currentInventory = DB.getInventory();
                     jsonData.forEach(row => {
                         if (!row.serial) return;
-                        const newItem = { serial: row.serial ? row.serial.toString().toUpperCase() : '', brand: row.brand || 'Desconocido', model: row.model || '', type: row.type || 'CELULAR', cost: parseFloat(row.cost) || 0, status: row.status || 'EN_INVENTORY', date: row.date || new Date().toISOString() };
+                        const newItem = { 
+                            serial: row.serial ? row.serial.toString().toUpperCase() : '', 
+                            brand: row.brand || 'Desconocido', 
+                            model: row.model || '', 
+                            type: row.type || 'CELULAR', 
+                            cost: parseFloat(row.cost) || 0, 
+                            warehouse: row.warehouse || 'ALVAGARA', 
+                            status: row.status || 'EN_INVENTORY', 
+                            date: row.date || new Date().toISOString() 
+                        };
                         const existingIdx = currentInventory.findIndex(i => i.serial === newItem.serial);
                         if (existingIdx >= 0) { currentInventory[existingIdx] = newItem; updated++; }
                         else { currentInventory.push(newItem); count++; }
@@ -1463,7 +2584,6 @@
                 reader.readAsArrayBuffer(file);
             },
 
-            openModal: (id) => document.getElementById(`modal-${id}`).classList.remove('hidden'),
             closeModal: (id) => document.getElementById(`modal-${id}`).classList.add('hidden')
         };
 
