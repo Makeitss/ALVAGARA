@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALVAGARA - Sistema de Gestión</title>
+    <!-- Librerías Externas -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="images/ALVAGARA-copia.png" type="image/png">
+    <!-- LIBRERÍA: Gráficos Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Nuestro CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- NOTIFICACIONES -->
+    <div id="toast-container"></div>
+
+    <!-- AREA DE FACTURA PARA IMPRIMIR -->
+    <div id="invoice-print-area">
+        <div class="invoice-header">
+            <div>
+                <h1 style="color: #53515a; font-size: 2rem;">ALVAGARA</h1>
+                <p>Gestión de Tecnología</p>
+                <p>NIT: 900.123.456-7</p>
+                <p>Calle Falsa 123, Ciudad</p>
+            </div>
+            <div style="text-align: right;">
+                <h2 style="color: #333; margin-bottom: 5px;">FACTURA ELECTRÓNICA</h2>
+                <p id="inv-date" style="font-weight: bold;"></p>
+                <p id="inv-id" style="font-family: monospace; color: #777;"></p>
+                <p id="inv-wh" style="font-size: 0.9rem; color: #777;"></p>
+            </div>
+        </div>
+
+        <div class="invoice-details">
+            <h3 style="color: #555; border-bottom: 1px solid #eee; padding-bottom: 5px;">Información del Cliente</h3>
+            <p><strong>Nombre:</strong> <span id="inv-client-name"></span></p>
+            <p><strong>Email:</strong> <span id="inv-client-email"></span></p>
+            <p><strong>Teléfono:</strong> <span id="inv-client-phone"></span></p>
+        </div>
+
+        <table class="invoice-table">
+            <thead>
+                <tr>
+                    <th>Descripción</th>
+                    <th>Serial</th>
+                    <th>Precio Unitario</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody id="inv-items"></tbody>
+        </table>
+
+        <div class="invoice-total">
+            Total a Pagar: <span id="inv-total"></span>
+        </div>
+        
+        <div style="margin-top: 50px; text-align: center; font-size: 0.8rem; color: #777;">
+            <p>Gracias por su compra.</p>
+            <p>Documento generado automáticamente por ALVAGARA System.</p>
+        </div>
+    </div>
+
+    <!-- OVERLAY USUARIO BLOQUEADO (ACTUALIZADO) -->
+    <div id="user-blocked-overlay" class="modal-overlay hidden" style="background: rgba(0,0,0,0.85); z-index: 9999;">
+        <div style="background: white; padding: 40px; border-radius: 20px; max-width: 500px; text-align: center; animation: slideIn 0.5s;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 5rem; color: #e74c3c; margin-bottom: 20px;"></i>
+            <h1 style="color: #333;">USUARIO BLOQUEADO</h1>
+            <p style="color: #666; margin-bottom: 30px;">Has superado el tiempo de préstamo (2 horas) sin devolver ni vender el equipo.</p>
+            
+            <div style="display: grid; gap: 15px;">
+                <button class="action-btn" onclick="app.handleBlockedReturn()" style="background: #3498db; padding: 15px; font-size: 1.1rem;">
+                    <i class="fas fa-undo"></i> Devolví el Artículo
+                </button>
+                <button class="action-btn" onclick="app.openBlockedSaleModal()" style="background: #2ecc71; padding: 15px; font-size: 1.1rem;">
+                    <i class="fas fa-check-circle"></i> Lo vendí (Olvidé marcarlo)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VISTA DASHBOARD (Sistema Principal) -->
+    <div id="dashboard-view" class="dashboard-container hidden">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2 style="font-size: 20px; margin:0;">ALVAGARA</h2>
+            </div>
+            <ul class="nav-links">
+                <li class="nav-item hidden" id="nav-dashboard" onclick="app.navigate('dashboard')">
+                    <i class="fas fa-chart-pie"></i> Dashboard
+                </li>
+                <li class="nav-item" id="nav-pos" onclick="app.navigate('pos')">
+                    <i class="fas fa-cash-register"></i> Punto de Venta
+                </li>
+                <li class="nav-item" id="nav-inventory" onclick="app.navigate('inventory')">
+                    <i class="fas fa-boxes"></i> Inventario
+                </li>
+                <li class="nav-item" id="nav-requests" onclick="app.navigate('requests')">
+                    <i class="fas fa-hand-holding-heart"></i> Solicitudes
+                </li>
+                <!-- REMISIONES -->
+                <li class="nav-item hidden" id="nav-remissions" onclick="app.navigate('remissions')">
+                    <i class="fas fa-truck"></i> Remisiones
+                </li>
+                <!-- CIERRE DE CAJA -->
+                <li class="nav-item hidden" id="nav-closing" onclick="app.navigate('closing')">
+                    <i class="fas fa-cash-register"></i> Cierre de Caja
+                </li>
+                <!-- REPORTES DE CAJA -->
+                <li class="nav-item hidden" id="nav-closing-reports" onclick="app.navigate('closing-reports')">
+                    <i class="fas fa-file-invoice-dollar"></i> Reportes Caja
+                </li>
+                <!-- SECCION USUARIOS (Solo Admin) -->
+                <li class="nav-item hidden" id="nav-users" onclick="app.navigate('users')">
+                    <i class="fas fa-users-cog"></i> Usuarios
+                </li>
+                <li class="nav-item hidden" id="nav-sales" onclick="app.navigate('sales')">
+                    <i class="fas fa-chart-line"></i> Ventas y Reportes
+                </li>
+                <!-- SECCION PAGOS (ADMIN Y EXTERNOS) -->
+                <li class="nav-item hidden" id="nav-payments" onclick="app.navigate('payments')">
+                    <i class="fas fa-credit-card"></i> Pagos
+                </li>
+                <li class="nav-item" id="nav-settings" onclick="app.navigate('settings')">
+                    <i class="fas fa-cog"></i> Configuración
+                </li>
+            </ul>
+            <div class="user-info">
+                <p><strong>Usuario:</strong> <span id="current-username">-</span></p>
+                <p><strong>Rol:</strong> <span id="current-role">-</span></p>
+                <p><strong>Almacén:</strong> <span id="current-warehouse" style="color:#53515a; font-weight:bold;">-</span></p>
+                <button class="action-btn secondary mt-2" style="width:100%" onclick="app.logout()">Cerrar Sesión</button>
+            </div>
+        </aside>
+
+        <!-- Contenido Principal -->
+        <main class="main-content">
+            <header class="mobile-header">
+                <i class="fas fa-bars hamburger" onclick="document.getElementById('sidebar').classList.toggle('active')"></i>
+                <span style="font-weight: 700; color: #53515a;">ALVAGARA</span>
+                <div style="width: 24px;"></div>
+            </header>
+            <header class="header-bar">
+                <div class="page-title" id="page-title">Dashboard</div>
+                <div id="header-actions"></div>
+            </header>
+
+            <!-- SECCIÓN: DASHBOARD (Solo Admin) -->
+            <section id="section-dashboard">
+                <div class="card-grid">
+                    <div class="card">
+                        <h3>Ventas Totales</h3>
+                        <div class="value" id="kpi-revenue">$0.00</div>
+                    </div>
+                    <div class="card">
+                        <h3>Ganancia Neta</h3>
+                        <div class="value" id="kpi-profit" style="color: #2ecc71;">$0.00</div>
+                    </div>
+                    <!-- CAPITAL ACTUAL -->
+                    <div class="card hidden" id="card-capital">
+                        <h3 style="color: #53515a;">Capital Actual</h3>
+                        <div class="value" id="kpi-capital" style="color: #333;">$0.00</div>
+                        <small style="color:#888;">Dinero disponible para compras</small>
+                    </div>
+                    <div class="card">
+                        <h3>Stock Mi Almacén</h3>
+                        <div class="value" id="kpi-stock">0</div>
+                    </div>
+                    <div class="card">
+                        <h3>Solicitudes Pendientes</h3>
+                        <div class="value" id="kpi-requests" style="color: #fbc02d;">0</div>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="card">
+                        <h3>Ventas por Método de Pago</h3>
+                        <div class="chart-container">
+                            <canvas id="chart-payment"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECCIÓN: POS -->
+            <section id="section-pos" class="hidden">
+                <div class="pos-container">
+                    <div class="pos-products">
+                        <div class="controls-row">
+                            <input type="text" class="search-input" placeholder="Buscar producto..." onkeyup="app.filterPos(this.value)">
+                            <div style="font-size: 0.9rem; color: #666; display: flex; align-items: center;">
+                                <span style="display:inline-block; width:10px; height:10px; background:#e3f2fd; margin-right:5px; border-radius:50%; border:1px solid #1976d2;"></span> Mi Almacén
+                                <span style="display:inline-block; width:10px; height:10px; background:#e8f5e9; margin-left:10px; margin-right:5px; border-radius:50%; border:1px solid #2e7d32;"></span> Disponible (Aprobado)
+                            </div>
+                        </div>
+                        <div class="product-grid" id="pos-grid"></div>
+                    </div>
+
+                    <div class="pos-cart" id="pos-cart-panel">
+                        <div class="pos-header" onclick="app.toggleCartMobile()">
+                            <h3><i class="fas fa-shopping-cart"></i> Carrito</h3>
+                            <span id="cart-count-badge" class="badge" style="background: #53515a; color: white;">0</span>
+                        </div>
+                        <div class="pos-items" id="cart-list"></div>
+                        <div class="pos-footer">
+                            <div class="flex justify-between items-center" style="margin-bottom: 15px;">
+                                <span style="font-weight: 600;">Total</span>
+                                <span id="cart-total" style="font-size: 1.2rem; font-weight: bold;">$0.00</span>
+                            </div>
+                            <button class="action-btn" onclick="app.prepareCheckout()" style="width: 100%; padding: 15px; background: #2ecc71;">
+                                COBRAR AHORA
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECCIÓN: INVENTARIO -->
+            <section id="section-inventory" class="hidden">
+                <div class="controls-row">
+                    <input type="text" id="search-inventory" class="search-input" placeholder="Buscar por serial, marca o modelo..." onkeyup="app.filterInventory()">
+                    <select id="filter-status" class="search-input" style="flex: 0 0 150px;" onchange="app.filterInventory()">
+                        <option value="">Todos los estados</option>
+                        <option value="EN_INVENTORY">En Inventario</option>
+                        <option value="VENDIDO">Vendido</option>
+                        <option value="PRESTADO">Prestado</option>
+                        <option value="VENDIDO_PENDIENTE">Vendido Pendiente Pago</option>
+                    </select>
+                    <button class="action-btn hidden" id="btn-add-item" onclick="app.openModal('add-item')">
+                        <i class="fas fa-plus"></i> Nuevo Equipo
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Serial</th>
+                                <th>Marca/Modelo</th>
+                                <th>Almacén</th>
+                                <th>Costo</th>
+                                <th>Estado</th>
+                                <th>Solicitudes</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- SECCIÓN: SOLICITUDES (CON TABS) -->
+            <section id="section-requests" class="hidden">
+                <div class="card" style="margin-bottom: 20px; border-left: 5px solid #fbc02d;">
+                    <h3 style="color: #d35400; margin:0;">Solicitudes entrantes</h3>
+                    <p style="margin: 5px 0 0 0; color: #666;">Admins ven todas. Gerentes/Vendedores solo ven las de su almacén.</p>
+                </div>
+                
+                <div class="tabs-container">
+                    <button class="tab-btn active" id="tab-loans" onclick="app.switchRequestsTab('LOAN')">Préstamos</button>
+                    <button class="tab-btn" id="tab-transfers" onclick="app.switchRequestsTab('TRANSFER')">Traslados</button>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha Solicitud</th>
+                                <th>Solicitante</th>
+                                <th>Almacén Solicitante</th>
+                                <th>Equipo</th>
+                                <th>Serial</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requests-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- SECCIÓN: REMISIONES -->
+            <section id="section-remissions" class="hidden">
+                <div class="card" style="margin-bottom: 20px; border-left: 5px solid #006064;">
+                    <h3 style="color: #006064; margin:0;">Historial de Remisiones</h3>
+                    <p style="margin: 5px 0 0 0; color: #666;">Registro de traslados entre almacenes aprobados.</p>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID Remisión</th>
+                                <th>Fecha</th>
+                                <th>De Almacén</th>
+                                <th>A Almacén</th>
+                                <th>Solicitante</th>
+                                <th>Items</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="remissions-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- SECCIÓN: CIERRE DE CAJA (DIARIO) -->
+            <section id="section-closing" class="hidden">
+                <div class="controls-row">
+                    <div>
+                        <label style="font-weight: bold; margin-right: 10px;">Fecha de Cierre:</label>
+                        <input type="date" id="closing-date" class="search-input" style="width: auto; display: inline-block;" onchange="app.loadClosingData()">
+                    </div>
+                    <button class="action-btn" onclick="app.processCashClose()"><i class="fas fa-calculator"></i> Procesar Cierre</button>
+                </div>
+
+                <div class="closing-grid">
+                    <div class="closing-card">
+                        <h3><i class="fas fa-money-bill-wave"></i> Conteo Físico</h3>
+                        <p class="text-sm" style="margin-bottom: 15px; color: #666;">Ingrese el valor exacto que tiene en cada medio de pago.</p>
+                        
+                        <div class="form-group">
+                            <label>Efectivo en Caja ($)</label>
+                            <input type="number" id="close-cash-physical" placeholder="0.00" step="100">
+                        </div>
+                        <div class="form-group">
+                            <label>Nequi / Transferencias ($)</label>
+                            <input type="number" id="close-nequi-physical" placeholder="0.00" step="100">
+                        </div>
+                        <div class="form-group">
+                            <label>Datafono / Tarjetas ($)</label>
+                            <input type="number" id="close-card-physical" placeholder="0.00" step="100">
+                        </div>
+
+                        <div style="margin-top: 20px; padding: 10px; background: #f9f9f9; border-radius: 8px;">
+                            <label>Observaciones (Opcional)</label>
+                            <textarea id="close-observations" style="width: 100%; height: 80px; padding: 10px; border-radius: 8px; border: 1px solid #ddd; resize: none;" placeholder="Si hubo alguna novedad, descríbala aquí..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="closing-card">
+                        <h3><i class="fas fa-balance-scale"></i> Comparativa Sistema vs. Físico</h3>
+                        
+                        <div id="closing-comparison-area">
+                            <div class="text-sm" style="text-align: center; color: #999; padding: 40px;">
+                                Seleccione una fecha y presione "Procesar Cierre"
+                            </div>
+                        </div>
+
+                        <div id="closing-result-box" class="closing-status-box"></div>
+                        
+                        <div id="closing-discrepancy-report" class="hidden" style="margin-top: 20px; padding: 15px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 8px;">
+                            <h4 style="color: #856404; margin-bottom: 5px;"><i class="fas fa-exclamation-triangle"></i> Reporte de Incongruencia</h4>
+                            <p id="discrepancy-text" style="font-size: 0.9rem; color: #856404;"></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECCIÓN: REPORTES DE CAJA (ADMIN) -->
+            <section id="section-closing-reports" class="hidden">
+                <div class="card" style="margin-bottom: 20px; border-left: 5px solid #53515a;">
+                    <h3 style="color: #53515a; margin:0;">Reportes Diarios de Cierre</h3>
+                    <p style="margin: 5px 0 0 0; color: #666;">Consolidado de cierres enviados por cada almacén.</p>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha Cierre</th>
+                                <th>Almacén</th>
+                                <th>Responsable</th>
+                                <th>Estado</th>
+                                <th>Diferencia</th>
+                                <th>Detalle</th>
+                            </tr>
+                        </thead>
+                        <tbody id="closing-reports-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- NUEVA SECCIÓN: USUARIOS (Solo Admin) -->
+            <section id="section-users" class="hidden">
+                <div class="controls-row">
+                    <button class="action-btn" onclick="app.openUserModal()">
+                        <i class="fas fa-user-plus"></i> Nuevo Usuario
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Nombre Completo</th>
+                                <th>Rol</th>
+                                <th>Almacén</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+             <!-- SECCIÓN: VENTAS Y REPORTES -->
+             <section id="section-sales" class="hidden">
+                <div class="card-grid">
+                    <div class="card">
+                        <h3>Ventas Totales</h3>
+                        <div class="value" id="kpi-total-revenue">$0.00</div>
+                    </div>
+                    <div class="card">
+                        <h3>Ganancia Neta</h3>
+                        <div class="value" id="kpi-profit-report" style="color: #2ecc71;">$0.00</div>
+                    </div>
+                    <div class="card">
+                        <h3>Ganancia Hoy</h3>
+                        <div class="value" id="kpi-profit-today">$0.00</div>
+                    </div>
+                </div>
+
+                <h3>Historial de Transacciones</h3>
+                <div class="table-container" style="margin-top: 15px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th data-label="Fecha">Fecha</th>
+                                <th data-label="Vendedor">Vendedor</th>
+                                <th data-label="Almacén">Almacén</th>
+                                <th data-label="Cliente">Cliente</th>
+                                <th data-label="Método">Método</th>
+                                <th data-label="Venta">Precio Venta</th>
+                                <th data-label="Acciones">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sales-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- SECCIÓN: PAGOS (ADMIN Y EXTERNOS) -->
+            <section id="section-payments" class="hidden">
+                <div class="card" style="margin-bottom: 20px; border-left: 5px solid #e67e22;">
+                    <h3 style="color: #e67e22; margin:0;">Gestión de Pagos</h3>
+                    <p style="margin: 5px 0 0 0; color: #666;">
+                        <span id="payments-title-text">Vendedores Externos: Abona a tus facturas pendientes.</span>
+                        <span id="admin-payments-text" class="hidden">Admin: Verifica los abonos recibidos para actualizar el capital.</span>
+                    </p>
+                </div>
+
+                <div id="admin-verification-area" class="hidden" style="margin-bottom: 30px;">
+                    <h4><i class="fas fa-check-double"></i> Abonos Pendientes de Verificación</h4>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Vendedor</th>
+                                    <th>Equipo</th>
+                                    <th>Monto</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pending-verification-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="payments-grid">
+                    <!-- Lista de Deudas (Para Externos) -->
+                    <div class="card" id="debts-card">
+                        <h4>Mis Deudas Pendientes</h4>
+                        <div id="payments-debt-list" class="payments-list" style="margin-top: 15px;">
+                            <!-- Items de deuda aquí -->
+                        </div>
+                    </div>
+
+                    <!-- Formulario de Abono (Para Externos) -->
+                    <div class="card" id="payment-form-card">
+                        <h4>Realizar Abono</h4>
+                        <p class="text-sm">Selecciona la factura a la que deseas abonar:</p>
+                        <div class="form-group">
+                            <select id="pay-select-invoice" onchange="app.updatePaymentMax()">
+                                <option value="">Seleccione factura...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Monto a Abonar ($)</label>
+                            <input type="number" id="pay-amount" placeholder="0.00">
+                            <p class="text-sm" style="margin-top:5px;" id="pay-max-hint"></p>
+                        </div>
+                        <div class="form-group">
+                            <label>Método de Pago</label>
+                            <select id="pay-method">
+                                <option value="EFECTIVO">Efectivo</option>
+                                <option value="TRANSFERENCIA">Transferencia</option>
+                            </select>
+                        </div>
+                        <button class="action-btn" style="width:100%" onclick="app.processPayment()">Registrar Abono</button>
+                    </div>
+                </div>
+            </section>
+
+             <!-- SECCIÓN: CONFIGURACIÓN -->
+             <section id="section-settings" class="hidden">
+                <div class="card" style="max-width: 600px; margin: 0 auto; margin-bottom: 20px;">
+                    <h3>Respaldo y Migración</h3>
+                    
+                    <div class="flex items-center" style="margin-bottom: 30px; padding: 15px; background: #f9f9f9; border-radius: 12px;">
+                        <div style="flex:1;">
+                            <strong>Auto-Respaldo (Cada 5 min)</strong>
+                            <p class="text-sm">Guarda automáticamente en disco local.</p>
+                        </div>
+                        <input type="checkbox" id="auto-backup-toggle" checked>
+                        <label for="auto-backup-toggle">
+                            <div class="love-heart"><div class="round"></div><div class="bottom"></div></div>
+                        </label>
+                    </div>
+
+                    <div class="flex flex-col gap-2">
+                        <p style="margin-bottom: 10px;">Cargar Base de Datos desde Excel:</p>
+                        <label class="btn-upload-styled">
+                            <input type="file" hidden accept=".xlsx, .xls" onchange="app.importExcel(this)">
+                            <div class="svg-wrapper">
+                                <svg height="24" width="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none"></path><path d="M1 14.5 6 9h2l3.5 3.5L16 8h3l-7.5 8-8-8.5H1zM9 22h6a1 1 0 0 1 0 2H9a1 1 0 0 1 0-2zm0-4h6a1 1 0 0 1 0 2H9a1 1 0 0 1 0-2zm0-4h6a1 1 0 0 1 0 2H9a1 1 0 0 1 0-2zM12 2V0H8v2H4a1 1 0 0 0 0 2h16a1 1 0 0 1 0-2h-4z" fill="currentColor"></path></svg>
+                            </div>
+                            <span>Cargar Base de Datos</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- CONFIGURACION ALMACENES (SOLO ADMIN) -->
+                <div class="card hidden" id="admin-warehouses-card" style="max-width: 600px; margin: 0 auto; border: 2px solid #53515a;">
+                    <h3 style="color: #53515a;">Gestión de Almacenes</h3>
+                    <p class="text-sm" style="margin-bottom: 15px;">Crea nuevos almacenes para asignar a tus agentes externos.</p>
+                    
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="new-warehouse-name" placeholder="Nombre del nuevo almacén" class="search-input">
+                        <button class="action-btn success" onclick="app.addWarehouse()">Crear</button>
+                    </div>
+
+                    <ul id="warehouses-list" style="list-style: none; margin-top: 15px;">
+                        <!-- Lista de almacenes -->
+                    </ul>
+                </div>
+
+                <!-- CONFIGURACION CAPITAL (SOLO ADMIN) -->
+                <div class="card hidden" id="admin-settings-card" style="max-width: 600px; margin: 0 auto; border: 2px solid #53515a; margin-top: 20px;">
+                    <h3 style="color: #53515a;">Administración de Capital</h3>
+                    <p class="text-sm" style="margin-bottom: 15px;">Ajuste el capital global de la empresa. Esto afecta la disponibilidad de compra de mercancía.</p>
+                    
+                    <div class="flex justify-between items-center" style="background:#f9f9f9; padding:15px; border-radius:10px; margin-bottom:15px;">
+                        <span>Capital Actual Registrado:</span>
+                        <strong id="settings-current-capital" style="font-size:1.2rem;">$0.00</strong>
+                    </div>
+
+                    <button class="action-btn" onclick="app.openModal('admin-capital')">
+                        <i class="fas fa-coins"></i> Ajustar / Inyectar Capital
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL: AGREGAR EQUIPO -->
+    <div id="modal-add-item" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header"><h3>Registrar Nuevo Equipo</h3><button class="close-modal" onclick="app.closeModal('add-item')">&times;</button></div>
+            <form id="form-add-item">
+                <div class="form-group"><label>Serial (Único)</label><input type="text" name="serial" required></div>
+                <div class="form-group"><label>Marca</label><input type="text" name="brand" placeholder="Samsung, Apple..." required></div>
+                <div class="form-group"><label>Modelo</label><input type="text" name="model" placeholder="S23 Ultra, iPhone 14..." required></div>
+                
+                <div class="flex gap-2">
+                    <div class="form-group" style="flex:1"><label>Tipo</label><select name="type"><option value="CELULAR">Celular</option><option value="TABLET">Tablet</option><option value="LAPTOP">Laptop</option><option value="ACCESORIO">Accesorio</option></select></div>
+                    <div class="form-group" style="flex:1">
+                        <label>Almacén Destino</label>
+                        <select name="warehouse" id="add-warehouse-select" required>
+                            <!-- Dinámico -->
+                        </select>
+                        <small style="color:#d35400" id="wh-locked-msg" class="hidden">Bloqueado a tu almacén</small>
+                    </div>
+                </div>
+                
+                <div class="form-group"><label>Costo Compra (Afecta Capital)</label><input type="number" name="cost" step="0.01" required></div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="action-btn secondary" onclick="app.closeModal('add-item')">Cancelar</button>
+                    <button type="submit" class="action-btn">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: USUARIO -->
+    <div id="modal-user-form" class="modal-overlay hidden">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header"><h3>Gestión de Usuario</h3><button class="close-modal" onclick="app.closeModal('user-form')">&times;</button></div>
+            <form id="form-user">
+                <input type="hidden" name="originalUser" id="user-original">
+                
+                <div class="form-group">
+                    <label>Usuario (Login)</label>
+                    <input type="text" name="user" id="user-login" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Nombre Completo</label>
+                    <input type="text" name="name" id="user-name" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" name="pass" id="user-pass" placeholder="Dejar vacío para mantener">
+                </div>
+
+                <div class="form-group">
+                    <label>Rol</label>
+                    <select name="role" id="user-role">
+                        <option value="ADMIN">ADMIN</option>
+                        <option value="GERENTE">GERENTE</option>
+                        <option value="VENDEDOR">VENDEDOR</option>
+                        <option value="VENDEDOR EXTERNO">VENDEDOR EXTERNO</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Almacén Asignado</label>
+                    <select name="warehouse" id="user-warehouse">
+                        <!-- Dinámico -->
+                    </select>
+                    <small style="color:#e67e22" id="warehouse-change-warning" class="hidden">¡Cuidado! Cambiar de almacén notificará al empleado.</small>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="action-btn secondary" onclick="app.closeModal('user-form')">Cancelar</button>
+                    <button type="submit" class="action-btn">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: AJUSTE CAPITAL (ADMIN) -->
+    <div id="modal-admin-capital" class="modal-overlay hidden">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header"><h3>Ajustar Capital Global</h3><button class="close-modal" onclick="app.closeModal('admin-capital')">&times;</button></div>
+            <form onsubmit="app.handleCapitalAdjustment(event)">
+                <p style="margin-bottom: 15px; color: #555;">Ingrese el nuevo monto total de capital disponible en la empresa.</p>
+                <div class="form-group">
+                    <label>Nuevo Monto de Capital ($)</label>
+                    <input type="number" id="new-capital-input" required step="0.01">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="action-btn secondary" onclick="app.closeModal('admin-capital')">Cancelar</button>
+                    <button type="submit" class="action-btn">Actualizar Capital</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: DETALLES REMISION / CIERRE CAJA (Reutilizable) -->
+    <div id="modal-remission-details" class="modal-overlay hidden">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>Detalle</h3>
+                <button class="close-modal" onclick="app.closeModal('remission-details')">&times;</button>
+            </div>
+            <div id="remission-details-content">
+                <!-- Contenido dinámico -->
+            </div>
+            <div class="modal-actions">
+                <button class="action-btn secondary" onclick="app.closeModal('remission-details')">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: VENTA TARDE (PARA USUARIO BLOQUEADO) -->
+    <div id="modal-late-sale" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Reportar Venta Tardía</h3>
+                <button class="close-modal" onclick="app.closeModal('late-sale')">&times;</button>
+            </div>
+            <form onsubmit="app.submitBlockedSale(event)">
+                <p style="margin-bottom:15px; color:#e67e22;">Estás marcando un préstamo vencido como vendido. Esto generará la deuda correspondiente.</p>
+                <input type="hidden" id="late-sale-serial">
+                <div class="form-group">
+                    <label>Nombre del Cliente</label>
+                    <input type="text" id="late-sale-client" required>
+                </div>
+                <div class="form-group">
+                    <label>Precio de Venta ($)</label>
+                    <input type="number" id="late-sale-price" required>
+                </div>
+                <div class="form-group">
+                    <label>Método de Pago</label>
+                    <select id="late-sale-method">
+                        <option value="EFECTIVO">Efectivo</option>
+                        <option value="TRANSFERENCIA">Transferencia</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="action-btn secondary" onclick="app.closeModal('late-sale')">Cancelar</button>
+                    <button type="submit" class="action-btn success">Confirmar Venta y Deuda</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ACTUALIZAR ESTADO / REMISIONES -->
+    <div id="modal-update-status" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header"><h3>Gestión de Equipo</h3><button class="close-modal" onclick="app.closeModal('update-status')">&times;</button></div>
+            <p id="modal-item-info" style="margin-bottom: 15px; font-weight: bold;"></p>
+            <form id="form-update-status">
+                <input type="hidden" name="serial" id="status-serial">
+                <input type="hidden" name="current-cost" id="status-cost">
+                
+                <div class="form-group">
+                    <label>Actualizar Costo (Opcional)</label>
+                    <input type="number" name="newCost" id="new-cost-input" placeholder="Dejar vacío para mantener">
+                    <small style="color:#777">El cambio de costo se registrará en el historial.</small>
+                </div>
+
+                <div class="form-group"><label>Nuevo Estado</label><select name="newStatus" id="status-select" onchange="app.toggleStatusFields()" required>
+                    <option value="EN_INVENTORY">En Inventario</option>
+                    <option value="VENDIDO">Vendido</option>
+                    <option value="PRESTADO">Prestado / Traslado</option>
+                    <option value="EN_GARANTIA">En Garantía</option>
+                    <option value="EN_REPARACION">En Reparación</option>
+                    <option value="PERDIDO">Perdido</option>
+                    <option value="DEVUELTO">Devuelto</option>
+                </select></div>
+                
+                <div id="fields-sale" class="hidden">
+                    <div class="form-group"><label>Precio de Venta</label><input type="number" name="salePrice" step="0.01" placeholder="0.00"></div>
+                    <div style="background: #f9f9f9; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                        <h4 style="margin-bottom: 10px; color: #555;">Datos del Comprador</h4>
+                        <div class="form-group"><label>Nombre Completo</label><input type="text" name="buyerName"></div>
+                        <div class="form-group"><label>Teléfono</label><input type="tel" name="buyerPhone"></div>
+                        <div class="form-group"><label>Email</label><input type="email" name="buyerEmail"></div>
+                        <label class="checkbox-wrapper">
+                            <input type="checkbox" name="requestInvoice" class="custom-checkbox" id="chk-invoice-inv">
+                            <span>¿Generar Factura Electrónica?</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="fields-loan" class="hidden">
+                    <p style="font-size:0.9rem; color:#d35400; margin-bottom:10px;">Nota: Los préstamos entre almacenes generan Remisión automática.</p>
+                    <div class="form-group">
+                        <label>Destino</label>
+                        <select name="loanDestinationType" id="loan-dest-type" onchange="app.toggleLoanDest()" required>
+                            <option value="PERSONA">Persona (Externa)</option>
+                            <option value="ALMACEN">Otro Almacén (Remisión)</option>
+                        </select>
+                    </div>
+                    
+                    <div id="field-loan-person" class="form-group">
+                        <label>Nombre del Solicitante</label>
+                        <input type="text" name="loanTo">
+                    </div>
+
+                    <div id="field-loan-warehouse" class="form-group hidden">
+                        <label>Almacén de Destino</label>
+                        <select name="loanWarehouse" id="loan-warehouse-select">
+                            <!-- Dinámico -->
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="action-btn secondary" onclick="app.closeModal('update-status')">Cancelar</button>
+                    <button type="submit" class="action-btn">Confirmar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: CHECKOUT POS -->
+    <div id="modal-pos-checkout" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header"><h3>Finalizar Venta</h3><button class="close-modal" onclick="app.closeModal('pos-checkout')">&times;</button></div>
+            <p style="margin-bottom: 15px; color: #555;">Total a cobrar: <span id="pos-checkout-total" style="font-weight: bold; font-size: 1.2rem;"></span></p>
+            <form id="form-pos-checkout">
+                <div style="background: #f0f4f8; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                    <h4 style="margin-bottom: 10px; color: #333;">Método de Pago</h4>
+                    <div class="form-group">
+                        <select name="paymentMethod" id="pos-payment-method" onchange="app.toggleInstallments()" required>
+                            <option value="EFECTIVO">Efectivo</option>
+                            <option value="TRANSFERENCIA">Transferencia (Nequi, Daviplata, etc.)</option>
+                            <option value="TARJETA_CREDITO">Tarjeta de Crédito</option>
+                        </select>
+                    </div>
+                    <div id="pos-installments-group" class="form-group hidden">
+                        <label>Número de Cuotas</label>
+                        <input type="number" name="installments" min="1" max="36" value="1">
+                    </div>
+                </div>
+
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 10px;">
+                    <h4 style="margin-bottom: 10px; color: #555;">Datos del Comprador</h4>
+                    <div class="form-group"><label>Nombre Completo</label><input type="text" name="buyerName" placeholder="Cliente de mostrador"></div>
+                    <div class="form-group"><label>Teléfono</label><input type="tel" name="buyerPhone"></div>
+                    <div class="form-group"><label>Email</label><input type="email" name="buyerEmail"></div>
+                    <label class="checkbox-wrapper">
+                        <input type="checkbox" name="requestInvoice" class="custom-checkbox" id="chk-invoice-pos">
+                        <span>¿Generar Factura Electrónica?</span>
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="action-btn secondary" onclick="app.closeModal('pos-checkout')">Cancelar</button>
+                    <button type="submit" class="action-btn">Procesar Venta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: CONFIRMAR PRECIO INDIVIDUAL (POS) -->
+    <div id="modal-pos-price" class="modal-overlay hidden">
+        <div class="modal" style="max-width:400px">
+            <div class="modal-header"><h3>Confirmar Precio</h3><button class="close-modal" onclick="app.closeModal('pos-price')">&times;</button></div>
+            <p id="modal-pos-desc" style="margin-bottom: 15px;"></p>
+            <form onsubmit="app.confirmAddToCart(event)">
+                <input type="hidden" id="pos-temp-serial">
+                <div class="form-group"><label>Precio de Venta</label><input type="number" id="pos-temp-price" required></div>
+                <button type="submit" class="action-btn" style="width:100%">Agregar al Carrito</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: DETALLES DE VENTA / REMISION -->
+    <div id="modal-sale-details" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="detail-modal-title">Detalle de Transacción</h3>
+                <button class="close-modal" onclick="app.closeModal('sale-details')">&times;</button>
+            </div>
+            <div id="sale-details-content">
+                <!-- Contenido dinámico -->
+            </div>
+            <div class="modal-actions">
+                <button class="action-btn secondary" onclick="app.closeModal('sale-details')">Cerrar</button>
+                <button class="action-btn hidden" id="btn-invoice-from-details" onclick="app.generateInvoiceFromDetails()">
+                    <i class="fas fa-print"></i> Factura
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nuestro JS -->
+    <script src="script.js"></script>
+</body>
+</html>
